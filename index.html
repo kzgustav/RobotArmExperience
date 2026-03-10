@@ -1,0 +1,1475 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Robot Arm Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&family=JetBrains+Mono:ital,wght@0,400;0,500;1,400&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #080c14;
+  --surface:   #0d1420;
+  --surface2:  #0f1929;
+  --surface3:  #111827;
+  --border:    #1e2d40;
+  --border2:   #263348;
+  --blue:      #38bdf8;
+  --blue-dim:  rgba(56,189,248,0.12);
+  --blue-glow: rgba(56,189,248,0.35);
+  --green:     #34d399;
+  --green-dim: rgba(52,211,153,0.12);
+  --orange:    #fb923c;
+  --purple:    #a78bfa;
+  --red:       #f87171;
+  --text:      #e2e8f0;
+  --text-mid:  #94a3b8;
+  --text-dim:  #4b6280;
+  --font-ui:   'Outfit','Noto Sans JP',sans-serif;
+  --font-code: 'JetBrains Mono',monospace;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─────────────────────────────
+   GLOBAL NAV TABS
+───────────────────────────── */
+#global-nav {
+  height: 42px;
+  background: #060a11;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 0;
+  flex-shrink: 0;
+  z-index: 50;
+}
+
+.gnav-logo {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--blue);
+  letter-spacing: 0.1em;
+  margin-right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.gnav-logo .logo-sq {
+  width: 24px; height: 24px;
+  border-radius: 6px;
+  background: var(--blue-dim);
+  border: 1px solid rgba(56,189,248,0.25);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+.gnav-tabs {
+  display: flex;
+  gap: 2px;
+}
+
+.gnav-tab {
+  padding: 5px 16px;
+  font-family: var(--font-ui);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-dim);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 0.01em;
+}
+.gnav-tab:hover { color: var(--text-mid); background: rgba(255,255,255,0.04); }
+.gnav-tab.active { color: var(--text); background: var(--surface); }
+.gnav-tab[data-panel="student"].active { color: var(--blue); }
+.gnav-tab[data-panel="admin"].active   { color: var(--orange); }
+.gnav-tab[data-panel="ai"].active      { color: var(--purple); }
+
+.gnav-spacer { flex: 1; }
+
+.gnav-badge {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 700;
+}
+.gnav-badge.live {
+  background: rgba(248,113,113,0.12);
+  border: 1px solid rgba(248,113,113,0.3);
+  color: var(--red);
+  animation: livePulse 2s ease infinite;
+}
+
+/* ─────────────────────────────
+   PANEL SYSTEM
+───────────────────────────── */
+#panels {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.panel {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+}
+.panel.active { display: flex; }
+
+/* ─────────────────────────────
+   STUDENT PANEL — STEP BAR
+───────────────────────────── */
+#wrapper {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#step-bar {
+  height: 54px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 4px;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+#bar-logo {
+  display: flex; align-items: center; gap: 9px;
+  font-size: 13px; font-weight: 700;
+  color: var(--blue); letter-spacing: 0.1em;
+  margin-right: 20px; white-space: nowrap;
+}
+#bar-logo .logo-icon {
+  width: 28px; height: 28px; border-radius: 7px;
+  background: var(--blue-dim); border: 1px solid rgba(56,189,248,0.25);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+
+#step-pips { display: flex; align-items: center; gap: 2px; }
+
+.step-pip {
+  display: flex; align-items: center; gap: 7px;
+  padding: 5px 13px 5px 8px; border-radius: 20px;
+  font-size: 12px; font-weight: 600;
+  border: 1px solid transparent; color: var(--text-dim);
+  white-space: nowrap; transition: all 0.25s;
+}
+.step-pip .num {
+  width: 20px; height: 20px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 800;
+  background: var(--border); color: var(--text-dim);
+  flex-shrink: 0; transition: all 0.25s;
+}
+.step-pip.active { border-color: rgba(56,189,248,0.4); color: var(--blue); background: var(--blue-dim); }
+.step-pip.active .num { background: var(--blue); color: #000; box-shadow: 0 0 10px var(--blue-glow); }
+.step-pip.done { color: var(--green); }
+.step-pip.done .num { background: var(--green); color: #000; }
+.pip-sep { color: var(--border2); font-size: 16px; padding: 0 1px; line-height: 1; }
+#bar-spacer { flex: 1; }
+#bar-hint {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 11.5px; color: var(--text-dim); max-width: 280px;
+}
+#bar-hint svg { flex-shrink: 0; }
+
+/* ─────────────────────────────
+   MISSION PANEL
+───────────────────────────── */
+#mission-panel {
+  height: 62px;
+  background: var(--surface2); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 20px; gap: 14px; flex-shrink: 0;
+}
+.mission-tag {
+  padding: 3px 9px; background: var(--blue-dim);
+  border: 1px solid rgba(56,189,248,0.25); border-radius: 4px;
+  font-size: 9.5px; font-weight: 700; color: var(--blue); letter-spacing: 0.12em; flex-shrink: 0;
+}
+#mission-text { flex: 1; min-width: 0; }
+#mission-title { font-size: 14px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
+#mission-desc  { font-size: 11.5px; color: var(--text-mid); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#mission-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+#reset-btn {
+  padding: 7px 15px; background: transparent; color: var(--text-dim);
+  border: 1px solid var(--border2); border-radius: 7px;
+  font-family: var(--font-ui); font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+}
+#reset-btn:hover:not(:disabled) { border-color: var(--text-mid); color: var(--text); }
+#reset-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+#run-btn {
+  padding: 7px 18px; background: var(--blue); color: #000; border: none; border-radius: 7px;
+  font-family: var(--font-ui); font-size: 12px; font-weight: 800; cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; gap: 6px; letter-spacing: 0.03em;
+}
+#run-btn:hover:not(:disabled) { background: #7dd3fc; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(56,189,248,0.35); }
+#run-btn:active:not(:disabled) { transform: none; }
+#run-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* ─────────────────────────────
+   MAIN SPLIT
+───────────────────────────── */
+#main { flex: 1; display: flex; overflow: hidden; }
+
+/* Editor */
+#editor-panel {
+  width: 42%; min-width: 240px; display: flex; flex-direction: column;
+  background: var(--surface2); flex-shrink: 0; overflow: hidden;
+}
+#editor-chrome {
+  height: 36px; background: var(--bg); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 12px; flex-shrink: 0;
+}
+.mac-dots { display: flex; gap: 6px; margin-right: 14px; }
+.mac-dot { width: 11px; height: 11px; border-radius: 50%; opacity: 0.85; }
+.mac-dot.r { background: #ff5f56; } .mac-dot.y { background: #ffbd2e; } .mac-dot.g { background: #27c93f; }
+.editor-tab {
+  height: 36px; padding: 0 14px; display: flex; align-items: center; gap: 7px;
+  font-family: var(--font-code); font-size: 11.5px; color: var(--text-mid);
+  border-right: 1px solid var(--border); border-bottom: 2px solid var(--blue); background: var(--surface2);
+}
+.tab-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--orange); }
+#editor-area { flex: 1; display: flex; overflow: hidden; }
+#line-numbers {
+  width: 46px; padding: 14px 10px 14px 0; background: var(--bg); border-right: 1px solid var(--border);
+  font-family: var(--font-code); font-size: 12.5px; line-height: 21px; color: var(--text-dim);
+  text-align: right; overflow: hidden; flex-shrink: 0; user-select: none; opacity: 0.7;
+}
+#code-editor {
+  flex: 1; padding: 14px 18px; font-family: var(--font-code); font-size: 12.5px; line-height: 21px;
+  color: #abb2bf; background: transparent; outline: none; overflow: auto; white-space: pre;
+  tab-size: 2; caret-color: var(--blue); word-break: keep-all;
+}
+#code-editor:focus { background: rgba(56,189,248,0.015); }
+#code-editor .hl-kw  { color: #c792ea; }
+#code-editor .hl-fn  { color: #82aaff; }
+#code-editor .hl-str { color: #c3e88d; }
+#code-editor .hl-cm  { color: #546e7a; font-style: italic; }
+#code-editor .hl-num { color: #f78c6c; }
+#code-editor .hl-obj { color: #ffcb6b; }
+#editor-status {
+  height: 22px; background: var(--bg); border-top: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 14px; gap: 16px;
+  font-family: var(--font-code); font-size: 10px; color: var(--text-dim); flex-shrink: 0;
+}
+
+/* Divider */
+#divider {
+  width: 5px; background: var(--border); cursor: col-resize; flex-shrink: 0;
+  position: relative; z-index: 10; transition: background 0.15s;
+}
+#divider::after { content: ''; position: absolute; inset: 0 -4px; }
+#divider:hover, #divider.dragging { background: var(--blue); }
+
+/* Sim */
+#sim-panel { flex: 1; min-width: 200px; position: relative; overflow: hidden; background: #080c14; }
+#sim-canvas-container { position: absolute; inset: 0; }
+#sim-canvas-container canvas { width: 100% !important; height: 100% !important; display: block; }
+#sim-status {
+  position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+  background: rgba(8,12,20,0.88); color: var(--text-mid); padding: 7px 18px;
+  border-radius: 20px; font-size: 12px; backdrop-filter: blur(14px);
+  border: 1px solid var(--border2); white-space: nowrap; pointer-events: none;
+}
+
+/* ─────────────────────────────
+   STEP CLEAR
+───────────────────────────── */
+#step-clear-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none; opacity: 0;
+}
+#step-clear-overlay.show { animation: scFade 2.9s cubic-bezier(0.4,0,0.2,1) forwards; }
+#sc-bg { position: absolute; inset: 0; background: rgba(8,12,20,0.72); backdrop-filter: blur(6px); }
+#sc-body { position: relative; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+#step-clear-overlay.show #sc-body { animation: scPop 2.9s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+#sc-sub  { font-size: 11px; font-weight: 700; letter-spacing: 0.45em; color: var(--green); }
+#sc-text {
+  font-size: clamp(52px,8vw,88px); font-weight: 900; letter-spacing: 0.08em; line-height: 1;
+  background: linear-gradient(130deg,var(--green),var(--blue)); -webkit-background-clip: text;
+  background-clip: text; color: transparent; filter: drop-shadow(0 0 48px rgba(52,211,153,0.55));
+}
+#sc-stars { font-size: 24px; letter-spacing: 0.25em; color: var(--green); filter: drop-shadow(0 0 10px rgba(52,211,153,0.5)); }
+#sc-streak { position: absolute; top: 50%; left: -20%; width: 0; height: 3px; background: rgba(255,255,255,0.6); border-radius: 2px; filter: blur(2px); }
+#step-clear-overlay.show #sc-streak { animation: scStreak 2.9s ease forwards; }
+@keyframes scFade  { 0%{opacity:0} 8%{opacity:1} 78%{opacity:1} 100%{opacity:0} }
+@keyframes scPop   { 0%{transform:scale(0.55) translateY(30px)} 10%{transform:scale(1.06) translateY(-4px)} 16%{transform:scale(0.97)} 22%{transform:scale(1)} 78%{transform:scale(1)} 100%{transform:scale(1.12) translateY(-16px)} }
+@keyframes scStreak{ 0%{left:-20%;width:0;opacity:0} 8%{opacity:1} 20%{left:120%;width:80%;opacity:0.7} 21%{opacity:0} 100%{opacity:0} }
+
+/* ─────────────────────────────
+   ERROR TOAST
+───────────────────────────── */
+#error-toast {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(80px);
+  background: rgba(248,113,113,0.12); border: 1px solid rgba(248,113,113,0.35); color: #fca5a5;
+  padding: 10px 22px; border-radius: 8px; font-size: 12px; font-family: var(--font-code);
+  max-width: 520px; text-align: center; transition: transform 0.3s ease;
+  z-index: 300; backdrop-filter: blur(10px); pointer-events: none;
+}
+#error-toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ═══════════════════════════════════════════
+   ADMIN DASHBOARD
+═══════════════════════════════════════════ */
+#panel-admin {
+  overflow-y: auto;
+  background: var(--bg);
+}
+
+.adm-header {
+  padding: 18px 24px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 14px;
+  flex-shrink: 0; position: sticky; top: 0; z-index: 20;
+}
+.adm-title { font-size: 18px; font-weight: 700; color: var(--text); }
+.adm-live {
+  padding: 3px 10px; border-radius: 20px;
+  background: rgba(248,113,113,0.12); border: 1px solid rgba(248,113,113,0.3);
+  font-size: 10px; font-weight: 700; color: var(--red); letter-spacing: 0.12em;
+  animation: livePulse 2s ease infinite;
+}
+@keyframes livePulse { 0%,100%{opacity:1} 50%{opacity:0.55} }
+.adm-stats {
+  margin-left: auto;
+  display: flex; gap: 20px;
+}
+.adm-stat { text-align: right; }
+.adm-stat .val { font-size: 20px; font-weight: 700; color: var(--blue); line-height: 1; }
+.adm-stat .lbl { font-size: 10px; color: var(--text-dim); }
+
+/* Team grid */
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  padding: 18px 24px;
+}
+
+.team-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex; flex-direction: column; gap: 10px;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.team-card:hover { border-color: var(--border2); }
+.team-card.stalled {
+  border-color: rgba(251,146,60,0.5);
+  animation: stalledPulse 2.5s ease infinite;
+}
+@keyframes stalledPulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(251,146,60,0); border-color: rgba(251,146,60,0.45); }
+  50%     { box-shadow: 0 0 18px 0 rgba(251,146,60,0.18); border-color: rgba(251,146,60,0.85); }
+}
+
+.tc-header { display: flex; align-items: center; justify-content: space-between; }
+.tc-name { font-size: 15px; font-weight: 700; color: var(--text); }
+.tc-step-badge {
+  font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 10px;
+  background: var(--blue-dim); color: var(--blue);
+}
+.team-card.stalled .tc-step-badge { background: rgba(251,146,60,0.15); color: var(--orange); }
+
+.tc-members { font-size: 11px; color: var(--text-dim); line-height: 1.4; }
+
+/* 10-step progress track */
+.tc-progress {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 3px;
+}
+.tc-step {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  position: relative;
+}
+.tc-step .ts-pip {
+  width: 100%; height: 20px; border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700;
+  background: var(--border); color: var(--text-dim);
+  transition: all 0.2s;
+}
+.tc-step.done .ts-pip    { background: rgba(52,211,153,0.18); color: var(--green); }
+.tc-step.current .ts-pip { background: var(--blue-dim); color: var(--blue); box-shadow: 0 0 8px rgba(56,189,248,0.3); }
+.team-card.stalled .tc-step.current .ts-pip { background: rgba(251,146,60,0.15); color: var(--orange); box-shadow: none; }
+
+/* Task name tooltip (shown on hover via title) */
+.tc-step-label { font-size: 8px; color: var(--text-dim); text-align: center; line-height: 1.1; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Hints box */
+.tc-hints {
+  background: rgba(167,139,250,0.07);
+  border: 1px solid rgba(167,139,250,0.25);
+  border-radius: 8px; padding: 10px;
+  display: flex; flex-direction: column; gap: 5px;
+}
+.tc-hints-title {
+  font-size: 9.5px; font-weight: 700; color: var(--purple);
+  letter-spacing: 0.08em; margin-bottom: 2px;
+}
+.tc-hint-line { font-size: 11px; color: var(--text-mid); display: flex; gap: 6px; line-height: 1.4; }
+.tc-hint-line::before { content: '•'; color: var(--purple); flex-shrink: 0; }
+
+/* Hint send button */
+.tc-hint-btn {
+  padding: 7px 10px; width: 100%; background: transparent;
+  border: 1px solid var(--border2); border-radius: 7px;
+  font-family: var(--font-ui); font-size: 11.5px; font-weight: 600;
+  color: var(--text-dim); cursor: pointer; transition: all 0.15s; text-align: center;
+}
+.tc-hint-btn:hover { border-color: var(--purple); color: var(--purple); background: rgba(167,139,250,0.07); }
+.tc-hint-btn.sent { border-color: var(--green); color: var(--green); pointer-events: none; }
+
+/* ─── FAQ (虎の巻) ─── */
+.faq-section { padding: 4px 24px 28px; }
+.faq-heading {
+  font-size: 11.5px; font-weight: 700; color: var(--text-dim);
+  letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 14px 0 10px 12px; border-left: 3px solid var(--border2);
+  margin-bottom: 8px;
+}
+.faq-item {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; margin-bottom: 6px; overflow: hidden;
+}
+.faq-q {
+  padding: 13px 16px; font-size: 13px; font-weight: 600; color: var(--text);
+  cursor: pointer; display: flex; align-items: center; justify-content: space-between;
+  user-select: none; transition: background 0.15s; gap: 12px;
+}
+.faq-q:hover { background: var(--surface2); }
+.faq-arrow { color: var(--text-dim); font-size: 11px; transition: transform 0.2s; flex-shrink: 0; }
+.faq-item.open .faq-arrow { transform: rotate(180deg); }
+.faq-a { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+.faq-item.open .faq-a { max-height: 160px; }
+.faq-a-inner {
+  padding: 0 16px 14px; font-size: 12px; color: var(--text-mid); line-height: 1.7;
+  border-top: 1px solid var(--border);
+}
+
+/* ═══════════════════════════════════════════
+   AI REVIEW
+═══════════════════════════════════════════ */
+#panel-ai { background: var(--bg); overflow: hidden; }
+
+/* Header */
+.ai-header {
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  padding: 16px 24px; flex-shrink: 0;
+}
+.ai-header-top {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 14px;
+}
+.ai-header-icon {
+  width: 32px; height: 32px; border-radius: 9px;
+  background: rgba(167,139,250,0.15); border: 1px solid rgba(167,139,250,0.25);
+  display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;
+}
+.ai-header-title { font-size: 15px; font-weight: 700; color: var(--text); }
+.ai-header-sub   { font-size: 11px; color: var(--text-dim); margin-top: 1px; }
+.ai-status-badge {
+  margin-left: auto; padding: 3px 10px; border-radius: 10px;
+  background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.25);
+  font-size: 10px; font-weight: 700; color: var(--green); letter-spacing: 0.1em;
+  animation: livePulse 2.5s ease infinite;
+}
+
+/* Score cards */
+.ai-scores { display: flex; gap: 10px; }
+.ai-score-card {
+  flex: 1; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 16px;
+}
+.ai-score-lbl  { font-size: 9.5px; font-weight: 700; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
+.ai-score-val  { font-size: 30px; font-weight: 900; line-height: 1; }
+.ai-score-sub  { font-size: 10px; color: var(--text-dim); margin-top: 3px; }
+.ai-score-card.quality   .ai-score-val { color: var(--green); }
+.ai-score-card.accuracy  .ai-score-val { color: var(--blue); }
+.ai-score-card.done-rate .ai-score-val { color: var(--purple); }
+
+/* Progress bar under done-rate */
+.ai-score-bar { height: 3px; background: var(--border); border-radius: 2px; margin-top: 6px; overflow: hidden; }
+.ai-score-bar-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--purple), var(--blue)); width: 92%; }
+
+/* Chat area */
+.ai-chat-area {
+  flex: 1; overflow-y: auto; padding: 18px 24px;
+  display: flex; flex-direction: column; gap: 14px;
+  scroll-behavior: smooth;
+}
+.ai-chat-area::-webkit-scrollbar { width: 4px; }
+.ai-chat-area::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+/* Messages */
+.chat-row { display: flex; gap: 10px; align-items: flex-start; max-width: 78%; }
+.chat-row.user { align-self: flex-end; flex-direction: row-reverse; }
+
+.chat-ava {
+  width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 13px;
+}
+.chat-row.ai   .chat-ava { background: rgba(167,139,250,0.12); border: 1px solid rgba(167,139,250,0.2); }
+.chat-row.user .chat-ava { background: var(--blue-dim); border: 1px solid rgba(56,189,248,0.2); }
+
+.chat-bubble {
+  padding: 10px 14px; border-radius: 12px;
+  font-size: 13px; line-height: 1.65; color: var(--text);
+}
+.chat-row.ai   .chat-bubble { background: var(--surface); border: 1px solid var(--border); border-top-left-radius: 4px; }
+.chat-row.user .chat-bubble { background: var(--blue-dim); border: 1px solid rgba(56,189,248,0.2); border-top-right-radius: 4px; }
+
+/* Variants */
+.chat-row.good    .chat-bubble { border-color: rgba(52,211,153,0.3);  background: rgba(52,211,153,0.05); }
+.chat-row.warn    .chat-bubble { border-color: rgba(251,146,60,0.3);  background: rgba(251,146,60,0.05); }
+.chat-row.insight .chat-bubble { border-color: rgba(167,139,250,0.3); background: rgba(167,139,250,0.05); }
+
+.chat-tag         { font-weight: 700; }
+.chat-tag.good    { color: var(--green); }
+.chat-tag.warn    { color: var(--orange); }
+.chat-tag.insight { color: var(--purple); }
+
+.chat-secondary {
+  margin-top: 8px; padding-top: 8px;
+  border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--text-mid);
+}
+
+/* Typing indicator */
+.chat-typing .chat-bubble { padding: 12px 16px; }
+.typing-dots { display: flex; gap: 4px; align-items: center; }
+.typing-dots span {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--text-dim);
+  animation: typingBounce 1.2s ease infinite;
+}
+.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typingBounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-5px)} }
+
+/* Fade-in for new messages */
+@keyframes msgIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+.chat-row { animation: msgIn 0.3s ease both; }
+
+/* Chat input */
+.ai-input-bar {
+  padding: 12px 24px; background: var(--surface); border-top: 1px solid var(--border);
+  display: flex; gap: 10px; flex-shrink: 0; align-items: center;
+}
+.ai-input {
+  flex: 1; background: var(--bg); border: 1px solid var(--border2); border-radius: 8px;
+  padding: 9px 14px; font-family: var(--font-ui); font-size: 13px; color: var(--text);
+  outline: none; transition: border-color 0.15s;
+}
+.ai-input:focus { border-color: var(--purple); }
+.ai-input::placeholder { color: var(--text-dim); }
+.ai-send {
+  padding: 9px 20px; background: var(--purple); color: #000; border: none; border-radius: 8px;
+  font-family: var(--font-ui); font-size: 12px; font-weight: 800; cursor: pointer; transition: all 0.15s;
+}
+.ai-send:hover { background: #c4b5fd; transform: translateY(-1px); }
+.ai-send:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+</style>
+</head>
+<body>
+
+<!-- ── GLOBAL TAB NAV ── -->
+<nav id="global-nav">
+  <div class="gnav-logo">
+    <div class="logo-sq">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <path d="M7 2v4l2.5 2" stroke="#38bdf8" stroke-width="1.4" stroke-linecap="round"/>
+        <circle cx="7" cy="7" r="5.5" stroke="#38bdf8" stroke-width="1.2"/>
+      </svg>
+    </div>
+    ROBOT ARM LAB
+  </div>
+  <div class="gnav-tabs">
+    <button class="gnav-tab active" data-panel="student">🎓 学生画面</button>
+    <button class="gnav-tab"        data-panel="admin">📊 管理者</button>
+    <button class="gnav-tab"        data-panel="ai">✨ AIレビュー</button>
+  </div>
+  <div class="gnav-spacer"></div>
+  <span class="gnav-badge live">● LIVE</span>
+</nav>
+
+<!-- ── PANEL CONTAINER ── -->
+<div id="panels">
+
+  <!-- ════════════ STUDENT PANEL ════════════ -->
+  <div id="panel-student" class="panel active">
+  <div id="wrapper">
+
+    <header id="step-bar">
+      <div id="bar-logo">
+        <div class="logo-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M8 2v5l3 2" stroke="#38bdf8" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="8" cy="8" r="6.5" stroke="#38bdf8" stroke-width="1.2"/>
+          </svg>
+        </div>
+        ROBOT ARM LAB
+      </div>
+      <div id="step-pips"></div>
+      <div id="bar-spacer"></div>
+      <div id="bar-hint">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+          <circle cx="6.5" cy="6.5" r="5.8" stroke="#4b6280" stroke-width="1.1"/>
+          <path d="M6.5 5.5v3.5M6.5 4v.5" stroke="#4b6280" stroke-width="1.1" stroke-linecap="round"/>
+        </svg>
+        <span id="hint-text">コードを書いて実行ボタンを押してください</span>
+      </div>
+    </header>
+
+    <div id="mission-panel">
+      <div class="mission-tag">MISSION</div>
+      <div id="mission-text">
+        <div id="mission-title">—</div>
+        <div id="mission-desc">—</div>
+      </div>
+      <div id="mission-actions">
+        <button id="reset-btn">↺ リセット</button>
+        <button id="run-btn">
+          <svg width="11" height="11" viewBox="0 0 11 11" fill="currentColor"><polygon points="2,1 10,5.5 2,10"/></svg>
+          実行
+        </button>
+      </div>
+    </div>
+
+    <div id="main">
+      <div id="editor-panel">
+        <div id="editor-chrome">
+          <div class="mac-dots">
+            <div class="mac-dot r"></div><div class="mac-dot y"></div><div class="mac-dot g"></div>
+          </div>
+          <div class="editor-tab">
+            <div class="tab-dot"></div>
+            <span id="tab-name">step1.js</span>
+          </div>
+        </div>
+        <div id="editor-area">
+          <div id="line-numbers"></div>
+          <div id="code-editor" contenteditable="true" spellcheck="false"
+               autocorrect="off" autocapitalize="off" autocomplete="off"></div>
+        </div>
+        <div id="editor-status">
+          <span>JavaScript</span>
+          <span id="cursor-pos">Ln 1, Col 1</span>
+          <span>UTF-8</span>
+        </div>
+      </div>
+
+      <div id="divider"></div>
+
+      <div id="sim-panel">
+        <div id="sim-canvas-container"></div>
+        <div id="sim-status">Step 1 を実行してスタート</div>
+      </div>
+    </div>
+
+  </div><!-- #wrapper -->
+  </div><!-- #panel-student -->
+
+  <!-- ════════════ ADMIN PANEL ════════════ -->
+  <div id="panel-admin" class="panel">
+
+    <div class="adm-header">
+      <div class="adm-title">📊 管理者ダッシュボード</div>
+      <div class="adm-live">● LIVE</div>
+      <div class="adm-stats">
+        <div class="adm-stat"><div class="val">8</div><div class="lbl">チーム</div></div>
+        <div class="adm-stat"><div class="val">32</div><div class="lbl">学習者</div></div>
+        <div class="adm-stat"><div class="val" id="adm-avg-step">—</div><div class="lbl">平均Step</div></div>
+      </div>
+    </div>
+
+    <div class="team-grid" id="team-grid"><!-- JS で生成 --></div>
+
+    <div class="faq-section">
+      <div class="faq-heading">虎の巻 — よくあるつまずきポイント</div>
+
+      <div class="faq-item">
+        <div class="faq-q">
+          <span>🗺️ 座標系がわからない・アームが変な方向に動く</span>
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-a">
+          <div class="faq-a-inner">
+            ロボットアームの原点はベース中心です。X軸が前方、Y軸が左方向、Z軸が上方向の右手座標系を使用しています。仕様書P.4の図を参照してください。移動量が大きすぎると可動域外に出るので、まず小さな値（±0.1m）でテストするよう指導してください。
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">
+          <span>⚡ move_to()コマンドが効かない・エラーが出る</span>
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-a">
+          <div class="faq-a-inner">
+            まず arm.connect() で接続されているか確認してください。次に arm.home() でホームポジションに戻してから再度試してください。「到達不可能な座標」エラーの場合は、IKソルバの可動域（半径 0.1〜3.8m）内かチェックしてください。
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">
+          <span>🤏 グリッパーが開かない・ブロックを落とす</span>
+          <span class="faq-arrow">▼</span>
+        </div>
+        <div class="faq-a">
+          <div class="faq-a-inner">
+            gripper.open() / gripper.close() の前後に await で待機してください。ブロック把持時は gripper.grasp(force=60) のように把持力を指定すると安定します。ブロックを落とす場合は移動速度を下げる（speed=0.3）のが効果的です。
+          </div>
+        </div>
+      </div>
+
+    </div><!-- .faq-section -->
+  </div><!-- #panel-admin -->
+
+  <!-- ════════════ AI REVIEW PANEL ════════════ -->
+  <div id="panel-ai" class="panel">
+
+    <!-- Header + Scores -->
+    <div class="ai-header">
+      <div class="ai-header-top">
+        <div class="ai-header-icon">✨</div>
+        <div>
+          <div class="ai-header-title">AIコードレビュー</div>
+          <div class="ai-header-sub">step4.js — 最終提出コードの解析結果</div>
+        </div>
+        <div class="ai-status-badge">● 解析完了</div>
+      </div>
+
+      <div class="ai-scores">
+        <div class="ai-score-card quality">
+          <div class="ai-score-lbl">コード品質</div>
+          <div class="ai-score-val">A</div>
+          <div class="ai-score-sub">優秀・可読性が高い</div>
+        </div>
+        <div class="ai-score-card accuracy">
+          <div class="ai-score-lbl">座標精度</div>
+          <div class="ai-score-val">B+</div>
+          <div class="ai-score-sub">良好・一部改善余地あり</div>
+        </div>
+        <div class="ai-score-card done-rate">
+          <div class="ai-score-lbl">達成率</div>
+          <div class="ai-score-val">92%</div>
+          <div class="ai-score-sub">目標をほぼ達成</div>
+          <div class="ai-score-bar"><div class="ai-score-bar-fill"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chat -->
+    <div class="ai-chat-area" id="ai-chat-area"></div>
+
+    <!-- Input -->
+    <div class="ai-input-bar">
+      <input class="ai-input" id="ai-input" type="text" placeholder="AIに質問する...（例：もっと詳しく教えて）" autocomplete="off">
+      <button class="ai-send" id="ai-send">送信 ↑</button>
+    </div>
+
+  </div>
+
+</div><!-- #panels -->
+
+<!-- STEP CLEAR overlay -->
+<div id="step-clear-overlay">
+  <div id="sc-bg"></div>
+  <div id="sc-body">
+    <div id="sc-sub">EXCELLENT!</div>
+    <div id="sc-text">STEP CLEAR</div>
+    <div id="sc-stars">★ ★ ★</div>
+    <div id="sc-streak"></div>
+  </div>
+</div>
+
+<div id="error-toast"></div>
+
+<script type="importmap">
+{ "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+/* ═══════════════════════════════════════════
+   GLOBAL TAB SWITCHING
+═══════════════════════════════════════════ */
+document.querySelectorAll('.gnav-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.gnav-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    const panel = document.getElementById('panel-' + btn.dataset.panel);
+    if (panel) panel.classList.add('active');
+    if (btn.dataset.panel === 'student') setTimeout(onSimResize, 0);
+  });
+});
+
+/* ═══════════════════════════════════════════
+   STEP DATA
+═══════════════════════════════════════════ */
+const STEPS = [
+  {
+    title: 'アームを赤ブロックの上へ移動させよう',
+    desc:  'arm.moveAbove("red") を呼び出して、アームを赤ブロックの真上に移動させてください。',
+    hint:  'moveAbove(target) はアームを指定ブロックの上に移動します',
+    code:
+`// Step 1: アームを赤ブロックの上へ移動
+// moveAbove(target) でアームを目標の上に移動します
+
+await arm.moveAbove("red");`
+  },
+  {
+    title: 'アームを下げてブロックを掴もう',
+    desc:  'lower() → grip() → lift() の順に呼び出して、赤ブロックを持ち上げてください。',
+    hint:  '3つの動作を await で待ちながら順番に実行しましょう',
+    code:
+`// Step 2: アームを下げてブロックを掴む
+// await を付けて順番に実行することが重要です
+
+await arm.lower();   // アームを下げる
+await arm.grip();    // ブロックを掴む
+await arm.lift();    // 持ち上げる`
+  },
+  {
+    title: '掴んだブロックを緑ブロックの上へ運ぼう',
+    desc:  'arm.moveTo("green") を呼び出して、赤ブロックを緑ブロックの真上まで運んでください。',
+    hint:  'moveTo(target) はアームを指定ブロックの位置へ移動します',
+    code:
+`// Step 3: 緑ブロックの上へ運ぶ
+// moveTo(target) でアームを目標位置に移動します
+
+await arm.moveTo("green");`
+  },
+  {
+    title: 'ブロックを置いてホームへ戻ろう',
+    desc:  'place() でブロックを置き、returnHome() でアームを初期位置に戻してください。',
+    hint:  'place() → returnHome() の順に実行します',
+    code:
+`// Step 4: ブロックを置いてホームに戻る
+// place() で置いて returnHome() でホームへ
+
+await arm.place();
+await arm.returnHome();`
+  }
+];
+
+/* ═══════════════════════════════════════════
+   THREE.JS SCENE
+═══════════════════════════════════════════ */
+const container = document.getElementById('sim-canvas-container');
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x080c14);
+scene.fog = new THREE.Fog(0x080c14, 16, 30);
+
+const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+camera.position.set(6, 5, 6);
+camera.lookAt(0, 1, 0);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+container.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 1, 0);
+controls.enableDamping = true;
+
+scene.add(new THREE.AmbientLight(0x404060, 1.5));
+const dirLight = new THREE.DirectionalLight(0xffffff, 2);
+dirLight.position.set(5, 8, 5); dirLight.castShadow = true;
+dirLight.shadow.mapSize.set(2048, 2048);
+dirLight.shadow.camera.left = -6; dirLight.shadow.camera.right = 6;
+dirLight.shadow.camera.top  =  6; dirLight.shadow.camera.bottom = -6;
+scene.add(dirLight);
+scene.add(new THREE.HemisphereLight(0x8888ff, 0x444422, 0.6));
+
+const ground = new THREE.Mesh(
+  new THREE.PlaneGeometry(20, 20),
+  new THREE.MeshStandardMaterial({ color: 0x09111e, roughness: 0.85 })
+);
+ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true;
+scene.add(ground);
+const grid = new THREE.GridHelper(20, 20, 0x1a2c3f, 0x111827);
+grid.position.y = 0.005; scene.add(grid);
+
+const metalMat   = new THREE.MeshStandardMaterial({ color: 0x95a5a6, metalness: 0.7, roughness: 0.3 });
+const jointMat   = new THREE.MeshStandardMaterial({ color: 0x38bdf8, metalness: 0.6, roughness: 0.25 });
+const gripperMat = new THREE.MeshStandardMaterial({ color: 0x7f8c8d, metalness: 0.5, roughness: 0.4 });
+
+const base = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.6, 0.3, 32), metalMat);
+base.position.y = 0.15; base.castShadow = true; scene.add(base);
+
+const basePivot = new THREE.Group(); basePivot.position.y = 0.3; base.add(basePivot);
+basePivot.add(Object.assign(new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 16), jointMat), { castShadow: true }));
+
+const upperArmGroup = new THREE.Group(); basePivot.add(upperArmGroup);
+const UPPER = 2.0;
+const upperArmMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, UPPER, 16), metalMat);
+upperArmMesh.position.y = UPPER / 2; upperArmMesh.castShadow = true; upperArmGroup.add(upperArmMesh);
+const elbowSphere = new THREE.Mesh(new THREE.SphereGeometry(0.15, 16, 16), jointMat);
+elbowSphere.position.y = UPPER; elbowSphere.castShadow = true; upperArmGroup.add(elbowSphere);
+
+const lowerArmGroup = new THREE.Group(); lowerArmGroup.position.y = UPPER; upperArmGroup.add(lowerArmGroup);
+const LOWER = 1.8;
+const lowerArmMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, LOWER, 16), metalMat);
+lowerArmMesh.position.y = LOWER / 2; lowerArmMesh.castShadow = true; lowerArmGroup.add(lowerArmMesh);
+
+const gripperGroup = new THREE.Group(); gripperGroup.position.y = LOWER; lowerArmGroup.add(gripperGroup);
+gripperGroup.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.1, 0.3), gripperMat), { castShadow: true }));
+
+const fingerL = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.3, 0.08), gripperMat);
+fingerL.position.set(-0.15, -0.15, 0); fingerL.castShadow = true; gripperGroup.add(fingerL);
+const fingerR = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.3, 0.08), gripperMat);
+fingerR.position.set(0.15, -0.15, 0); fingerR.castShadow = true; gripperGroup.add(fingerR);
+
+let gripperOpen = 0.15;
+const BS = 0.35;
+
+const redBlock = new THREE.Mesh(
+  new THREE.BoxGeometry(BS, BS, BS),
+  new THREE.MeshStandardMaterial({ color: 0xe74c3c, roughness: 0.4 })
+);
+redBlock.position.set(1.5, BS / 2, 1); redBlock.castShadow = true; scene.add(redBlock);
+
+const greenBlock = new THREE.Mesh(
+  new THREE.BoxGeometry(BS, BS, BS),
+  new THREE.MeshStandardMaterial({ color: 0x2ecc71, roughness: 0.4 })
+);
+greenBlock.position.set(-1.3, BS / 2, -1); greenBlock.castShadow = true; scene.add(greenBlock);
+
+function solveIK(tx, ty, tz) {
+  const baseAngle = Math.atan2(tx, tz);
+  const dx = Math.sqrt(tx*tx + tz*tz), dy = ty - 0.3;
+  let dist = Math.sqrt(dx*dx + dy*dy);
+  const maxR = UPPER + LOWER - 0.01;
+  if (dist > maxR) dist = maxR;
+  const cosE = (dist*dist - UPPER*UPPER - LOWER*LOWER) / (2*UPPER*LOWER);
+  const elbowAngle = -Math.acos(Math.max(-1, Math.min(1, cosE)));
+  const k1 = UPPER + LOWER*Math.cos(elbowAngle), k2 = LOWER*Math.sin(elbowAngle);
+  return { baseAngle, shoulderAngle: Math.atan2(dy,dx) - Math.atan2(k2,k1), elbowAngle };
+}
+
+let curA = { baseAngle: 0, shoulderAngle: Math.PI/4, elbowAngle: -Math.PI/3 };
+let isAnimating = false, grabbed = false;
+
+function applyAngles(a) {
+  basePivot.rotation.y     = a.baseAngle;
+  upperArmGroup.rotation.x = Math.PI/2 - a.shoulderAngle;
+  lowerArmGroup.rotation.x = -a.elbowAngle;
+}
+function setGripper(v) { gripperOpen = v; fingerL.position.x = -v; fingerR.position.x = v; }
+applyAngles(curA); setGripper(0.15);
+
+function getEEPos() {
+  gripperGroup.updateWorldMatrix(true, false);
+  return gripperGroup.getWorldPosition(new THREE.Vector3());
+}
+function animateTo(target, dur, onTick) {
+  return new Promise(resolve => {
+    const s0 = {...curA}, g0 = gripperOpen;
+    const g1 = target.gripperOpen !== undefined ? target.gripperOpen : g0;
+    const t0 = performance.now();
+    function tick() {
+      let t = Math.min((performance.now()-t0)/dur, 1);
+      t = t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2;
+      curA.baseAngle     = s0.baseAngle     + (target.baseAngle     - s0.baseAngle)     * t;
+      curA.shoulderAngle = s0.shoulderAngle + (target.shoulderAngle - s0.shoulderAngle) * t;
+      curA.elbowAngle    = s0.elbowAngle    + (target.elbowAngle    - s0.elbowAngle)    * t;
+      applyAngles(curA); setGripper(g0 + (g1-g0)*t);
+      if (onTick) onTick();
+      t < 1 ? requestAnimationFrame(tick) : resolve();
+    }
+    tick();
+  });
+}
+
+const ABOVE = 2.2, GRAB = BS/2 + 0.15;
+
+async function animMoveAbove(target) {
+  const p = target === 'red' ? redBlock.position : greenBlock.position;
+  setStatus('赤ブロックの上に移動中...');
+  await animateTo({ ...solveIK(p.x, ABOVE, p.z), gripperOpen: 0.2 }, 1500);
+}
+async function animLower() {
+  const p = redBlock.position; setStatus('アームを下げています...');
+  await animateTo({ ...solveIK(p.x, GRAB, p.z), gripperOpen: 0.2 }, 1000);
+}
+async function animGrip() {
+  setStatus('ブロックを掴んでいます...');
+  await animateTo({ ...curA, gripperOpen: 0.06 }, 600); grabbed = true;
+}
+async function animLift() {
+  const p = redBlock.position; setStatus('持ち上げています...');
+  await animateTo({ ...solveIK(p.x, ABOVE, p.z), gripperOpen: 0.06 }, 1000, () => {
+    if (grabbed) { const ee = getEEPos(); redBlock.position.set(ee.x, ee.y-0.3, ee.z); }
+  });
+}
+async function animMoveTo(target) {
+  const p = target === 'green' ? greenBlock.position : redBlock.position;
+  setStatus('緑ブロックの上へ移動中...');
+  await animateTo({ ...solveIK(p.x, ABOVE+BS, p.z), gripperOpen: 0.06 }, 2000, () => {
+    if (grabbed) { const ee = getEEPos(); redBlock.position.set(ee.x, ee.y-0.3, ee.z); }
+  });
+}
+async function animPlace() {
+  const gp = greenBlock.position; setStatus('ブロックを置いています...');
+  await animateTo({ ...solveIK(gp.x, BS+BS/2+0.15, gp.z), gripperOpen: 0.06 }, 1000, () => {
+    if (grabbed) { const ee = getEEPos(); redBlock.position.set(ee.x, ee.y-0.3, ee.z); }
+  });
+  grabbed = false; redBlock.position.set(gp.x, BS+BS/2, gp.z);
+  await animateTo({ ...curA, gripperOpen: 0.2 }, 500);
+}
+async function animReturnHome() {
+  const gp = greenBlock.position; setStatus('ホームポジションに戻っています...');
+  await animateTo({ ...solveIK(gp.x, ABOVE+BS, gp.z), gripperOpen: 0.2 }, 800);
+  await animateTo({ baseAngle: 0, shoulderAngle: Math.PI/4, elbowAngle: -Math.PI/3, gripperOpen: 0.15 }, 1500);
+}
+
+const arm = {
+  moveAbove:  t => animMoveAbove(t),
+  lower:      () => animLower(),
+  grip:       () => animGrip(),
+  lift:       () => animLift(),
+  moveTo:     t => animMoveTo(t),
+  place:      () => animPlace(),
+  returnHome: () => animReturnHome(),
+};
+
+/* ═══════════════════════════════════════════
+   STUDENT STATE & UI
+═══════════════════════════════════════════ */
+let currentStep = 0;
+const stepsDone = new Set();
+
+function setStatus(msg) { document.getElementById('sim-status').textContent = msg; }
+
+function renderPips() {
+  const el = document.getElementById('step-pips');
+  el.innerHTML = '';
+  STEPS.forEach((s, i) => {
+    if (i > 0) { const sep = document.createElement('span'); sep.className = 'pip-sep'; sep.textContent = '›'; el.appendChild(sep); }
+    const pip = document.createElement('div');
+    pip.className = 'step-pip' + (stepsDone.has(i) ? ' done' : i === currentStep ? ' active' : '');
+    const num = document.createElement('div'); num.className = 'num';
+    num.textContent = stepsDone.has(i) ? '✓' : String(i+1);
+    pip.appendChild(num); pip.appendChild(document.createTextNode(` Step ${i+1}`));
+    el.appendChild(pip);
+  });
+}
+
+function updateMission() {
+  const s = STEPS[currentStep];
+  document.getElementById('mission-title').textContent = `Step ${currentStep+1}: ${s.title}`;
+  document.getElementById('mission-desc').textContent  = s.desc;
+  document.getElementById('hint-text').textContent     = s.hint;
+  document.getElementById('tab-name').textContent      = `step${currentStep+1}.js`;
+}
+
+/* Code editor */
+const codeEditor  = document.getElementById('code-editor');
+const lineNumbers = document.getElementById('line-numbers');
+
+function buildHighlightedNodes(raw) {
+  const tokens = []; let i = 0;
+  while (i < raw.length) {
+    if (raw[i]==='/' && raw[i+1]==='/') {
+      const end = raw.indexOf('\n', i), t = end===-1 ? raw.slice(i) : raw.slice(i,end);
+      tokens.push({type:'cm',val:t}); i += t.length; continue;
+    }
+    if (raw[i]==='"') {
+      const end = raw.indexOf('"', i+1), t = end===-1 ? raw.slice(i) : raw.slice(i,end+1);
+      tokens.push({type:'str',val:t}); i += t.length; continue;
+    }
+    if (/[a-zA-Z_$]/.test(raw[i])) {
+      let j = i; while (j < raw.length && /[\w$]/.test(raw[j])) j++;
+      const word = raw.slice(i,j);
+      const kws = ['await','async','const','let','var','function','return','if','else','for','while','of','in','new'];
+      const fns = ['moveAbove','lower','grip','lift','moveTo','place','returnHome'];
+      tokens.push({ type: kws.includes(word)?'kw':word==='arm'?'obj':fns.includes(word)?'fn':'txt', val: word });
+      i = j; continue;
+    }
+    if (/\d/.test(raw[i])) {
+      let j = i; while (j < raw.length && /[\d.]/.test(raw[j])) j++;
+      tokens.push({type:'num',val:raw.slice(i,j)}); i = j; continue;
+    }
+    tokens.push({type:'txt',val:raw[i]}); i++;
+  }
+  const frag = document.createDocumentFragment();
+  const cm = {kw:'hl-kw',fn:'hl-fn',str:'hl-str',cm:'hl-cm',num:'hl-num',obj:'hl-obj'};
+  for (const tok of tokens) {
+    if (tok.type === 'txt') { frag.appendChild(document.createTextNode(tok.val)); }
+    else { const sp = document.createElement('span'); sp.className = cm[tok.type]; sp.textContent = tok.val; frag.appendChild(sp); }
+  }
+  return frag;
+}
+
+function loadStepCode() {
+  codeEditor.innerHTML = '';
+  codeEditor.appendChild(buildHighlightedNodes(STEPS[currentStep].code));
+  updateLineNumbers();
+}
+function updateLineNumbers() {
+  const n = (codeEditor.innerText||'').split('\n').length;
+  lineNumbers.innerHTML = Array.from({length:n},(_,i)=>i+1).join('<br>');
+}
+codeEditor.addEventListener('input', updateLineNumbers);
+codeEditor.addEventListener('scroll', () => { lineNumbers.scrollTop = codeEditor.scrollTop; });
+codeEditor.addEventListener('keydown', e => {
+  if (e.key === 'Tab') { e.preventDefault(); document.execCommand('insertText',false,'  '); }
+  lineNumbers.scrollTop = codeEditor.scrollTop;
+});
+function updateCursor() {
+  const sel = window.getSelection(); if (!sel.rangeCount) return;
+  const r = sel.getRangeAt(0).cloneRange();
+  r.selectNodeContents(codeEditor); r.setEnd(sel.getRangeAt(0).startContainer, sel.getRangeAt(0).startOffset);
+  const lines = r.toString().split('\n');
+  document.getElementById('cursor-pos').textContent = `Ln ${lines.length}, Col ${lines[lines.length-1].length+1}`;
+}
+codeEditor.addEventListener('keyup', updateCursor);
+codeEditor.addEventListener('click', updateCursor);
+
+function showStepClear(isFinal) {
+  const overlay = document.getElementById('step-clear-overlay');
+  document.getElementById('sc-sub').textContent   = isFinal ? 'CONGRATULATIONS!' : 'EXCELLENT!';
+  document.getElementById('sc-text').textContent  = isFinal ? 'MISSION COMPLETE'  : 'STEP CLEAR';
+  document.getElementById('sc-stars').textContent = isFinal ? '★ ★ ★ ★ ★'         : '★ ★ ★';
+  overlay.classList.remove('show'); void overlay.offsetWidth; overlay.classList.add('show');
+  overlay.addEventListener('animationend', () => overlay.classList.remove('show'), { once: true });
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-toast');
+  el.textContent = `⚠ ${msg}`; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3800);
+}
+
+async function runCode() {
+  if (isAnimating) return;
+  isAnimating = true;
+  const runBtn = document.getElementById('run-btn'), resetBtn = document.getElementById('reset-btn');
+  runBtn.disabled = resetBtn.disabled = true;
+  try {
+    const fn = new Function('arm', `return (async()=>{ ${codeEditor.innerText} })()`);
+    await fn(arm);
+    stepsDone.add(currentStep);
+    const isFinal = currentStep === STEPS.length - 1;
+    showStepClear(isFinal);
+    if (!isFinal) {
+      setStatus(`Step ${currentStep+1} クリア！次へ進みます...`);
+      await new Promise(r => setTimeout(r, 3000));
+      currentStep++; renderPips(); updateMission(); loadStepCode();
+      setStatus(`Step ${currentStep+1} を実行してください`);
+    } else {
+      setStatus('🎉 ミッション完了！赤ブロックが緑ブロックの上に置かれました！');
+    }
+  } catch (err) { showError(err.message || String(err)); }
+  finally { isAnimating = false; runBtn.disabled = resetBtn.disabled = false; }
+}
+
+function resetSim() {
+  if (isAnimating) return;
+  grabbed = false;
+  redBlock.position.set(1.5, BS/2, 1);
+  greenBlock.position.set(-1.3, BS/2, -1);
+  curA = { baseAngle: 0, shoulderAngle: Math.PI/4, elbowAngle: -Math.PI/3 };
+  applyAngles(curA); setGripper(0.15);
+  setStatus(`Step ${currentStep+1} を実行してください`);
+  loadStepCode();
+}
+
+document.getElementById('run-btn').addEventListener('click', runCode);
+document.getElementById('reset-btn').addEventListener('click', resetSim);
+
+/* Drag resize */
+const divider = document.getElementById('divider'), editorPanel = document.getElementById('editor-panel'), mainEl = document.getElementById('main');
+let dragX = 0, dragW = 0;
+divider.addEventListener('mousedown', e => { e.preventDefault(); dragX = e.clientX; dragW = editorPanel.offsetWidth; divider.classList.add('dragging'); document.body.style.userSelect = 'none'; document.body.style.cursor = 'col-resize'; });
+window.addEventListener('mousemove', e => { if (!divider.classList.contains('dragging')) return; const nw = Math.max(240,Math.min(dragW+e.clientX-dragX,mainEl.offsetWidth-240)); editorPanel.style.width = nw+'px'; onSimResize(); });
+window.addEventListener('mouseup', () => { if (!divider.classList.contains('dragging')) return; divider.classList.remove('dragging'); document.body.style.userSelect = ''; document.body.style.cursor = ''; });
+
+/* Sim resize */
+function onSimResize() {
+  const w = container.clientWidth, h = container.clientHeight;
+  if (!w || !h) return;
+  camera.aspect = w/h; camera.updateProjectionMatrix(); renderer.setSize(w, h);
+}
+new ResizeObserver(onSimResize).observe(container);
+
+/* Render loop */
+(function render() { requestAnimationFrame(render); controls.update(); renderer.render(scene, camera); })();
+
+/* ═══════════════════════════════════════════
+   ADMIN DASHBOARD
+═══════════════════════════════════════════ */
+const TEAMS = [
+  { name:'Alpha',   members:['田中','佐藤','山本','鈴木'],   step:4, stalled:false },
+  { name:'Beta',    members:['高橋','渡辺','伊藤','小林'],   step:3, stalled:true  },
+  { name:'Gamma',   members:['加藤','吉田','中村','松本'],   step:6, stalled:false },
+  { name:'Delta',   members:['井上','木村','林','清水'],     step:2, stalled:false },
+  { name:'Epsilon', members:['山口','森','池田','橋本'],     step:5, stalled:false },
+  { name:'Zeta',    members:['阿部','石川','前田','藤田'],   step:1, stalled:true  },
+  { name:'Eta',     members:['小川','岡田','後藤','長谷川'], step:8, stalled:false },
+  { name:'Theta',   members:['村上','近藤','坂本','遠藤'],   step:4, stalled:false },
+];
+
+const TASKS = ['仕様書を読む','座標系理解','move_to学習','初コード','実行確認','座標修正','目標接近','精度向上','クリア！','レビュー'];
+
+const STEP_HINTS = [
+  ['仕様書のP.1〜3をチームで読んでください','ロボットの座標原点を確認してください','役割分担を決めておくとスムーズです'],
+  ['X・Y・Z軸の向きを図で確認してください','ジョイント角とエンドエフェクタの関係を理解しましょう','右手系 vs 左手系に注意してください'],
+  ['move_to()の引数は(x, y, z)の順です','APIリファレンスのサンプルコードを参考に','速度パラメータはデフォルトで大丈夫です'],
+  ['まずprint文で現在位置を確認しましょう','ゴール座標は仕様書P.7に記載があります','ループより先に1回だけ動かしてみて'],
+  ['エラーメッセージを注意深く読んでください','ログファイルの最後の行を確認してください','再実行前にアームをホームに戻してください'],
+  ['誤差は±5mm以内を目指してください','座標値を0.1刻みで微調整してみましょう','オフセット変数を使うと調整しやすいです'],
+  ['残り距離をprint()で確認してください','制御ループのサンプリング周期を確認して','目標の10cm前から減速させてみてください'],
+  ['PID制御のPゲインを少し下げてみて','振動が出る場合はDゲインを上げてください','ノイズ対策にローパスフィルタを試して'],
+  ['クリア条件を再確認してください','ラスト10cmは低速モードがおすすめです','成功したらすぐスクリーンショットを！'],
+  ['コードにコメントを追加しましょう','チームで振り返りを行ってください','レビューシートの記入を忘れずに'],
+];
+
+function buildAdminDashboard() {
+  const grid = document.getElementById('team-grid');
+  grid.innerHTML = '';
+
+  TEAMS.forEach(team => {
+    const hIdx = Math.min(team.step - 1, STEP_HINTS.length - 1);
+    const hints = STEP_HINTS[hIdx];
+
+    const card = document.createElement('div');
+    card.className = 'team-card' + (team.stalled ? ' stalled' : '');
+
+    const pipsHtml = TASKS.map((task, i) => {
+      const pos = i + 1;
+      const cls = pos < team.step ? 'done' : pos === team.step ? 'current' : 'future';
+      const icon = pos < team.step ? '✓' : pos === team.step ? '▸' : '·';
+      return `<div class="tc-step ${cls}" title="${task}"><div class="ts-pip">${icon}</div></div>`;
+    }).join('');
+
+    card.innerHTML = `
+      <div class="tc-header">
+        <div class="tc-name">${team.name}</div>
+        <div class="tc-step-badge">Step ${team.step}${team.stalled?' ⏸':''}</div>
+      </div>
+      <div class="tc-members">${team.members.join(' · ')}</div>
+      <div class="tc-progress">${pipsHtml}</div>
+      <div class="tc-hints">
+        <div class="tc-hints-title">現在のヒント — Step ${team.step}</div>
+        ${hints.map(h => `<div class="tc-hint-line">${h}</div>`).join('')}
+      </div>
+      <button class="tc-hint-btn" data-team="${team.name}">💬 ヒントを送信</button>
+    `;
+    grid.appendChild(card);
+  });
+
+  // Average step
+  const avg = (TEAMS.reduce((s,t) => s+t.step, 0) / TEAMS.length).toFixed(1);
+  document.getElementById('adm-avg-step').textContent = avg;
+
+  // Hint buttons — event delegation
+  grid.addEventListener('click', e => {
+    const btn = e.target.closest('.tc-hint-btn');
+    if (!btn) return;
+    btn.textContent = '✓ 送信しました';
+    btn.classList.add('sent');
+    setTimeout(() => { btn.textContent = '💬 ヒントを送信'; btn.classList.remove('sent'); }, 2500);
+  });
+}
+
+// FAQ accordion
+document.querySelectorAll('.faq-q').forEach(q => {
+  q.addEventListener('click', () => q.closest('.faq-item').classList.toggle('open'));
+});
+
+/* ═══════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════ */
+renderPips();
+updateMission();
+loadStepCode();
+buildAdminDashboard();
+
+/* ═══════════════════════════════════════════
+   AI REVIEW CHAT
+═══════════════════════════════════════════ */
+const AI_HISTORY = [
+  { side:'ai', variant:'normal',  text:'お疲れさまでした！全体として良いコードです。' },
+  { side:'ai', variant:'good',    text:'Good: move_toで座標を正確に指定できています。' },
+  { side:'user',                  text:'直接移動だとダメですか？' },
+  { side:'ai', variant:'warn',    text:'改善: 中間点を経由する方が安全です。',
+    secondary:'💡 現場の知恵：実際のロボットは退避高さ（Z+0.3m）を経由してから目標へ向かいます。' },
+  { side:'ai', variant:'insight', text:'Insight: gripper.close()のタイミングが鍵。time.sleep(0.3)の待機がベストプラクティス。' },
+  { side:'user',                  text:'次のミッションに向けてアドバイスは？' },
+  { side:'ai', variant:'normal',  text:'次は複数ブロックの連続操作です。1つの動作完了を確認してから次へ進むことで、ミスが激減します。' },
+];
+
+// タグのプレフィックスとクラスの対応
+const VARIANT_TAG = { good:'✓ Good', warn:'⚠ 改善', insight:'💡 Insight' };
+
+function makeBubble(msg) {
+  const row = document.createElement('div');
+  row.className = `chat-row ${msg.side}${msg.variant && msg.variant!=='normal' ? ' '+msg.variant : ''}`;
+
+  const ava = document.createElement('div');
+  ava.className = 'chat-ava';
+  ava.textContent = msg.side === 'ai' ? '🤖' : '👤';
+
+  const bub = document.createElement('div');
+  bub.className = 'chat-bubble';
+
+  if (msg.side === 'ai' && msg.variant && msg.variant !== 'normal') {
+    const tag = document.createElement('span');
+    tag.className = `chat-tag ${msg.variant}`;
+    tag.textContent = VARIANT_TAG[msg.variant] + ': ';
+    bub.appendChild(tag);
+    bub.appendChild(document.createTextNode(msg.text));
+    if (msg.secondary) {
+      const sec = document.createElement('div');
+      sec.className = 'chat-secondary';
+      sec.textContent = msg.secondary;
+      bub.appendChild(sec);
+    }
+  } else {
+    bub.textContent = msg.text;
+  }
+
+  row.appendChild(ava);
+  row.appendChild(bub);
+  return row;
+}
+
+function showTypingThenMsg(area, msg, delay) {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      // Typing indicator
+      const typing = document.createElement('div');
+      typing.className = 'chat-row ai chat-typing';
+      typing.innerHTML = `<div class="chat-ava">🤖</div><div class="chat-bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div>`;
+      area.appendChild(typing);
+      area.scrollTop = area.scrollHeight;
+
+      setTimeout(() => {
+        area.removeChild(typing);
+        const el = makeBubble(msg);
+        area.appendChild(el);
+        area.scrollTop = area.scrollHeight;
+        resolve();
+      }, 900);
+    }, delay);
+  });
+}
+
+async function buildAIChat() {
+  const area = document.getElementById('ai-chat-area');
+  area.innerHTML = '';
+  let cumulativeDelay = 0;
+
+  for (const msg of AI_HISTORY) {
+    if (msg.side === 'user') {
+      await new Promise(r => setTimeout(r, cumulativeDelay));
+      const el = makeBubble(msg);
+      el.style.animationDelay = '0ms';
+      area.appendChild(el);
+      area.scrollTop = area.scrollHeight;
+      cumulativeDelay = 400;
+    } else {
+      await showTypingThenMsg(area, msg, cumulativeDelay);
+      cumulativeDelay = 300;
+    }
+  }
+}
+
+// AI返答候補（ユーザー入力に対するデモ応答）
+const AI_REPLIES = [
+  'なるほど、良い質問です！詳しく説明すると、アームの経路計画では安全性が最優先です。',
+  'コードを見ると、基本的な構造はしっかりできています。次のステップに進む準備ができていますよ。',
+  '中間点の設定は現場でも重要なスキルです。Z軸方向への退避移動を習慣にしてください。',
+  'time.sleep()の値は環境によって調整が必要です。まず0.3秒で試して、状況に応じて増やしてみてください。',
+  '複数ブロックの操作では、エラーハンドリングも重要です。try-exceptブロックを活用してみましょう。',
+];
+let replyIdx = 0;
+
+function addUserMsg(text) {
+  const area = document.getElementById('ai-chat-area');
+  area.appendChild(makeBubble({ side: 'user', text }));
+  area.scrollTop = area.scrollHeight;
+}
+
+async function addAIReply() {
+  const area = document.getElementById('ai-chat-area');
+  const typing = document.createElement('div');
+  typing.className = 'chat-row ai chat-typing';
+  typing.innerHTML = `<div class="chat-ava">🤖</div><div class="chat-bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div>`;
+  area.appendChild(typing);
+  area.scrollTop = area.scrollHeight;
+
+  await new Promise(r => setTimeout(r, 1000));
+  area.removeChild(typing);
+  const el = makeBubble({ side:'ai', variant:'normal', text: AI_REPLIES[replyIdx % AI_REPLIES.length] });
+  replyIdx++;
+  area.appendChild(el);
+  area.scrollTop = area.scrollHeight;
+}
+
+// Input handler
+const aiInput = document.getElementById('ai-input');
+const aiSend  = document.getElementById('ai-send');
+
+async function handleAISend() {
+  const text = aiInput.value.trim();
+  if (!text) return;
+  aiInput.value = '';
+  aiSend.disabled = true;
+  addUserMsg(text);
+  await addAIReply();
+  aiSend.disabled = false;
+  aiInput.focus();
+}
+
+aiSend.addEventListener('click', handleAISend);
+aiInput.addEventListener('keydown', e => { if (e.key === 'Enter') handleAISend(); });
+
+// AIレビュータブが開かれたときにチャットを初期化
+document.querySelectorAll('.gnav-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (btn.dataset.panel === 'ai') buildAIChat();
+  });
+});
+</script>
+</body>
+</html>

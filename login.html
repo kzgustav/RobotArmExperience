@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Robot Arm Lab — Login</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #080c14;
+  --blue:   #38bdf8;
+  --green:  #34d399;
+  --red:    #f87171;
+  --purple: #a78bfa;
+  --text:   #e2e8f0;
+  --dim:    #4b6280;
+  --font:   'Outfit','Noto Sans JP',sans-serif;
+  --mono:   'JetBrains Mono',monospace;
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  height: 100vh; overflow: hidden;
+  background: var(--bg);
+  font-family: var(--font);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text);
+}
+
+/* ── Canvas BG ── */
+#bg-canvas {
+  position: fixed; inset: 0; z-index: 0;
+  pointer-events: none;
+}
+
+/* ── Scan overlay ── */
+#scan-line {
+  position: fixed; left: 0; right: 0; height: 2px; z-index: 1;
+  background: linear-gradient(90deg, transparent, rgba(56,189,248,0.6), transparent);
+  pointer-events: none;
+  animation: scanMove 4s linear infinite;
+  filter: blur(1px);
+}
+@keyframes scanMove {
+  0%   { top: -4px; opacity: 0; }
+  5%   { opacity: 1; }
+  95%  { opacity: 1; }
+  100% { top: 100vh; opacity: 0; }
+}
+
+/* ── Login wrap ── */
+#login-wrap {
+  position: relative; z-index: 10;
+  display: flex; flex-direction: column; align-items: center; gap: 32px;
+}
+
+/* ── Top logo ── */
+#top-logo {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  animation: logoIn 0.8s cubic-bezier(0.34,1.3,0.64,1) both;
+}
+@keyframes logoIn {
+  from { opacity:0; transform: translateY(-24px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+
+.logo-ring {
+  width: 72px; height: 72px; border-radius: 20px;
+  background: rgba(56,189,248,0.08);
+  border: 1.5px solid rgba(56,189,248,0.3);
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+  box-shadow: 0 0 40px rgba(56,189,248,0.15), inset 0 0 20px rgba(56,189,248,0.05);
+  animation: ringPulse 3s ease infinite;
+}
+@keyframes ringPulse {
+  0%,100% { box-shadow: 0 0 40px rgba(56,189,248,0.15), inset 0 0 20px rgba(56,189,248,0.05); }
+  50%     { box-shadow: 0 0 60px rgba(56,189,248,0.3),  inset 0 0 30px rgba(56,189,248,0.1); }
+}
+
+.logo-ring svg { animation: logoSpin 8s linear infinite; }
+@keyframes logoSpin { to { transform: rotate(360deg); } }
+
+.logo-inner {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.logo-dot {
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--blue);
+  box-shadow: 0 0 12px var(--blue);
+}
+
+#logo-title {
+  font-size: 22px; font-weight: 900; letter-spacing: 0.12em;
+  color: var(--blue);
+  text-shadow: 0 0 30px rgba(56,189,248,0.4);
+}
+#logo-sub {
+  font-size: 11px; color: var(--dim); letter-spacing: 0.2em; text-transform: uppercase;
+}
+
+/* ── Card ── */
+#card {
+  width: 380px;
+  background: rgba(13,20,32,0.9);
+  border: 1px solid rgba(56,189,248,0.2);
+  border-radius: 18px;
+  padding: 32px 36px 28px;
+  backdrop-filter: blur(20px);
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(56,189,248,0.08),
+    0 24px 60px rgba(0,0,0,0.6),
+    0 0 80px rgba(56,189,248,0.05);
+  animation: cardIn 0.8s cubic-bezier(0.34,1.2,0.64,1) 0.15s both;
+}
+@keyframes cardIn {
+  from { opacity:0; transform: translateY(30px) scale(0.95); }
+  to   { opacity:1; transform: translateY(0) scale(1); }
+}
+
+/* Corner accents */
+#card::before, #card::after {
+  content: ''; position: absolute; width: 20px; height: 20px;
+}
+#card::before {
+  top: -1px; left: -1px;
+  border-top: 2px solid var(--blue); border-left: 2px solid var(--blue);
+  border-radius: 18px 0 0 0;
+}
+#card::after {
+  bottom: -1px; right: -1px;
+  border-bottom: 2px solid var(--blue); border-right: 2px solid var(--blue);
+  border-radius: 0 0 18px 0;
+}
+
+/* Card shimmer on load */
+.card-shimmer {
+  position: absolute; inset: 0; z-index: 0;
+  background: linear-gradient(105deg, transparent 40%, rgba(56,189,248,0.05) 50%, transparent 60%);
+  animation: shimmer 3s ease infinite;
+}
+@keyframes shimmer { 0%,100%{transform:translateX(-100%)} 50%{transform:translateX(100%)} }
+
+.card-content { position: relative; z-index: 1; }
+
+/* Card title */
+#card-title {
+  font-size: 13px; font-weight: 700; letter-spacing: 0.2em;
+  color: var(--dim); text-transform: uppercase;
+  margin-bottom: 24px;
+  display: flex; align-items: center; gap: 10px;
+}
+#card-title::before, #card-title::after {
+  content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(56,189,248,0.2));
+}
+#card-title::after { background: linear-gradient(270deg, transparent, rgba(56,189,248,0.2)); }
+
+/* Fields */
+.field { margin-bottom: 16px; }
+.field-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.15em; color: var(--dim);
+  text-transform: uppercase; margin-bottom: 7px; display: flex; gap: 6px; align-items: center;
+}
+.field-icon { font-size: 12px; }
+
+.field-input-wrap { position: relative; }
+.field-input {
+  width: 100%; padding: 11px 14px 11px 40px;
+  background: rgba(8,12,20,0.8);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 9px;
+  font-family: var(--mono); font-size: 14px; color: var(--text);
+  outline: none; transition: all 0.2s;
+  letter-spacing: 0.05em;
+}
+.field-input::placeholder { color: var(--dim); font-family: var(--font); font-size: 13px; letter-spacing: 0; }
+.field-input:focus {
+  border-color: rgba(56,189,248,0.5);
+  background: rgba(56,189,248,0.03);
+  box-shadow: 0 0 0 3px rgba(56,189,248,0.08);
+}
+.field-input.error {
+  border-color: rgba(248,113,113,0.5);
+  box-shadow: 0 0 0 3px rgba(248,113,113,0.08);
+}
+
+.field-prefix {
+  position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+  font-size: 14px; pointer-events: none;
+}
+
+/* Login button */
+#login-btn {
+  width: 100%; padding: 13px;
+  background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+  border: none; border-radius: 10px;
+  font-family: var(--font); font-size: 14px; font-weight: 800;
+  color: #000; cursor: pointer; letter-spacing: 0.08em;
+  transition: all 0.2s;
+  position: relative; overflow: hidden;
+  margin-top: 6px;
+  box-shadow: 0 4px 20px rgba(56,189,248,0.35);
+}
+#login-btn::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+  transform: translateX(-100%); transition: transform 0s;
+}
+#login-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(56,189,248,0.5);
+}
+#login-btn:hover::after { transform: translateX(100%); transition: transform 0.4s; }
+#login-btn:active { transform: translateY(0); }
+#login-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+/* Status message */
+#status-msg {
+  margin-top: 16px; min-height: 22px;
+  font-size: 12px; text-align: center; font-family: var(--mono);
+  transition: all 0.2s;
+}
+#status-msg.error   { color: var(--red); }
+#status-msg.success { color: var(--green); }
+#status-msg.loading { color: var(--blue); }
+
+/* Credential hint */
+#cred-hint {
+  margin-top: 18px; padding-top: 16px;
+  border-top: 1px solid rgba(56,189,248,0.08);
+  font-size: 10.5px; color: var(--dim); text-align: center;
+  font-family: var(--mono); letter-spacing: 0.03em;
+}
+
+/* ── Access Granted overlay ── */
+#access-overlay {
+  position: fixed; inset: 0; z-index: 100;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: rgba(8,12,20,0);
+  pointer-events: none; opacity: 0;
+}
+#access-overlay.show {
+  animation: overlayIn 0.4s ease forwards;
+  pointer-events: auto;
+}
+@keyframes overlayIn { to { opacity:1; background: rgba(8,12,20,0.96); } }
+
+#access-text {
+  font-size: clamp(36px,6vw,72px); font-weight: 900; letter-spacing: 0.15em;
+  background: linear-gradient(135deg, var(--green), var(--blue));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 0 40px rgba(52,211,153,0.6));
+  transform: scale(0.7); opacity: 0;
+}
+#access-overlay.show #access-text {
+  animation: accessPop 0.6s cubic-bezier(0.34,1.4,0.64,1) 0.2s forwards;
+}
+@keyframes accessPop {
+  to { transform: scale(1); opacity: 1; }
+}
+
+#access-sub {
+  font-size: 13px; color: var(--dim); letter-spacing: 0.3em; margin-top: 12px;
+  opacity: 0;
+}
+#access-overlay.show #access-sub {
+  animation: fadeIn 0.4s ease 0.6s forwards;
+}
+
+#access-bar {
+  width: 0; height: 2px; margin-top: 28px;
+  background: linear-gradient(90deg, var(--green), var(--blue));
+  border-radius: 2px;
+  box-shadow: 0 0 12px rgba(52,211,153,0.5);
+}
+#access-overlay.show #access-bar {
+  animation: barExpand 1s ease 0.5s forwards;
+}
+@keyframes barExpand { to { width: 240px; } }
+
+@keyframes fadeIn { to { opacity: 1; } }
+
+/* ── Denied shake ── */
+@keyframes shake {
+  0%,100%{ transform: translateX(0); }
+  15%    { transform: translateX(-8px); }
+  30%    { transform: translateX(8px); }
+  45%    { transform: translateX(-6px); }
+  60%    { transform: translateX(6px); }
+  75%    { transform: translateX(-4px); }
+  90%    { transform: translateX(4px); }
+}
+#card.shake { animation: shake 0.5s ease; }
+
+/* Loading dots */
+.dot-anim::after {
+  content: '';
+  animation: dots 1.2s steps(4, end) infinite;
+}
+@keyframes dots {
+  0%  { content: ''; }
+  25% { content: '.'; }
+  50% { content: '..'; }
+  75% { content: '...'; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+<div id="scan-line"></div>
+
+<div id="login-wrap">
+
+  <!-- Logo -->
+  <div id="top-logo">
+    <div class="logo-ring">
+      <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+        <!-- Outer ring with tick marks -->
+        <circle cx="30" cy="30" r="28" stroke="rgba(56,189,248,0.15)" stroke-width="1.2"/>
+        <circle cx="30" cy="30" r="22" stroke="rgba(56,189,248,0.08)" stroke-width="0.8" stroke-dasharray="4 6"/>
+        <!-- Arm segments -->
+        <line x1="30" y1="10" x2="30" y2="2" stroke="rgba(56,189,248,0.4)" stroke-width="1"/>
+        <line x1="50" y1="30" x2="58" y2="30" stroke="rgba(56,189,248,0.4)" stroke-width="1"/>
+        <line x1="10" y1="30" x2="2" y2="30" stroke="rgba(56,189,248,0.4)" stroke-width="1"/>
+        <line x1="30" y1="50" x2="30" y2="58" stroke="rgba(56,189,248,0.4)" stroke-width="1"/>
+      </svg>
+      <div class="logo-inner"><div class="logo-dot"></div></div>
+    </div>
+    <div id="logo-title">ROBOT ARM LAB</div>
+    <div id="logo-sub">学習管理システム v2.6</div>
+  </div>
+
+  <!-- Card -->
+  <div id="card">
+    <div class="card-shimmer"></div>
+    <div class="card-content">
+
+      <div id="card-title">SYSTEM LOGIN</div>
+
+      <div class="field">
+        <div class="field-label"><span class="field-icon">👤</span> USER ID</div>
+        <div class="field-input-wrap">
+          <span class="field-prefix">▸</span>
+          <input class="field-input" id="inp-id" type="text"
+                 placeholder="ユーザーIDを入力" autocomplete="off" autocapitalize="off">
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label"><span class="field-icon">🔐</span> PASSWORD</div>
+        <div class="field-input-wrap">
+          <span class="field-prefix">▸</span>
+          <input class="field-input" id="inp-pw" type="password"
+                 placeholder="パスワードを入力" autocomplete="off">
+        </div>
+      </div>
+
+      <button id="login-btn">▶&nbsp;&nbsp;LOGIN</button>
+
+      <div id="status-msg"></div>
+
+      <div id="cred-hint">
+        ID: <b style="color:#64748b">robot</b> &nbsp;/&nbsp; PASS: <b style="color:#64748b">test</b>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- #login-wrap -->
+
+<!-- Access granted overlay -->
+<div id="access-overlay">
+  <div id="access-text">ACCESS GRANTED</div>
+  <div id="access-sub">INITIALIZING SYSTEM...</div>
+  <div id="access-bar"></div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════
+   CANVAS BACKGROUND — particle network
+═══════════════════════════════════════════ */
+const canvas = document.getElementById('bg-canvas');
+const ctx    = canvas.getContext('2d');
+
+let W, H, particles;
+
+function resize() {
+  W = canvas.width  = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+  initParticles();
+}
+
+function initParticles() {
+  const count = Math.floor((W * H) / 14000);
+  particles = Array.from({ length: count }, () => ({
+    x:  Math.random() * W,
+    y:  Math.random() * H,
+    vx: (Math.random() - 0.5) * 0.3,
+    vy: (Math.random() - 0.5) * 0.3,
+    r:  Math.random() * 1.5 + 0.5,
+    pulse: Math.random() * Math.PI * 2,
+  }));
+}
+
+function drawBg() {
+  // Grid
+  ctx.clearRect(0, 0, W, H);
+  ctx.strokeStyle = 'rgba(30,45,64,0.5)';
+  ctx.lineWidth = 0.5;
+  const gs = 60;
+  for (let x = 0; x < W; x += gs) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+  }
+  for (let y = 0; y < H; y += gs) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+}
+
+const LINK_DIST = 140;
+let frame = 0;
+
+function animate() {
+  requestAnimationFrame(animate);
+  frame++;
+  drawBg();
+
+  // Update & draw particles
+  for (const p of particles) {
+    p.x += p.vx; p.y += p.vy; p.pulse += 0.02;
+    if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
+    if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
+
+    const glow = 0.4 + 0.3 * Math.sin(p.pulse);
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(56,189,248,${glow * 0.8})`;
+    ctx.fill();
+  }
+
+  // Links
+  for (let i = 0; i < particles.length; i++) {
+    for (let j = i + 1; j < particles.length; j++) {
+      const a = particles[i], b = particles[j];
+      const dx = a.x - b.x, dy = a.y - b.y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < LINK_DIST) {
+        const alpha = (1 - dist/LINK_DIST) * 0.25;
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.strokeStyle = `rgba(56,189,248,${alpha})`;
+        ctx.lineWidth = 0.6;
+        ctx.stroke();
+      }
+    }
+  }
+
+  // Rotating arm silhouette (top-right decorative)
+  const cx = W - 100, cy = 100, t = frame * 0.004;
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.strokeStyle = 'rgba(56,189,248,0.12)';
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  // Base
+  ctx.beginPath(); ctx.arc(0, 0, 18, 0, Math.PI*2); ctx.stroke();
+  // Upper arm
+  const ux = Math.cos(t) * 40, uy = Math.sin(t) * 40;
+  ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(ux, uy); ctx.stroke();
+  ctx.beginPath(); ctx.arc(ux, uy, 6, 0, Math.PI*2); ctx.stroke();
+  // Lower arm
+  const lx = ux + Math.cos(t*1.7 + 1) * 30, ly = uy + Math.sin(t*1.7 + 1) * 30;
+  ctx.beginPath(); ctx.moveTo(ux, uy); ctx.lineTo(lx, ly); ctx.stroke();
+  ctx.beginPath(); ctx.arc(lx, ly, 4, 0, Math.PI*2); ctx.stroke();
+  ctx.restore();
+
+  // Bottom-left decorative arm
+  const cx2 = 80, cy2 = H - 80, t2 = -frame * 0.003;
+  ctx.save();
+  ctx.translate(cx2, cy2);
+  ctx.strokeStyle = 'rgba(52,211,153,0.1)';
+  ctx.lineWidth = 1.5;
+  ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI*2); ctx.stroke();
+  const ux2 = Math.cos(t2) * 35, uy2 = Math.sin(t2) * 35;
+  ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(ux2, uy2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(ux2, uy2, 5, 0, Math.PI*2); ctx.stroke();
+  const lx2 = ux2 + Math.cos(t2*2) * 25, ly2 = uy2 + Math.sin(t2*2) * 25;
+  ctx.beginPath(); ctx.moveTo(ux2, uy2); ctx.lineTo(lx2, ly2); ctx.stroke();
+  ctx.restore();
+}
+
+window.addEventListener('resize', resize);
+resize();
+animate();
+
+/* ═══════════════════════════════════════════
+   LOGIN LOGIC
+═══════════════════════════════════════════ */
+const inpId  = document.getElementById('inp-id');
+const inpPw  = document.getElementById('inp-pw');
+const btn    = document.getElementById('login-btn');
+const status = document.getElementById('status-msg');
+const card   = document.getElementById('card');
+const overlay= document.getElementById('access-overlay');
+
+function setStatus(msg, type) {
+  status.className = type;
+  status.textContent = msg;
+}
+
+function clearErrors() {
+  inpId.classList.remove('error');
+  inpPw.classList.remove('error');
+  status.textContent = '';
+  status.className = '';
+}
+
+async function doLogin() {
+  clearErrors();
+  const id = inpId.value.trim();
+  const pw = inpPw.value;
+
+  if (!id) { inpId.classList.add('error'); setStatus('⚠ User IDを入力してください', 'error'); inpId.focus(); return; }
+  if (!pw) { inpPw.classList.add('error'); setStatus('⚠ Passwordを入力してください', 'error'); inpPw.focus(); return; }
+
+  // Loading state
+  btn.disabled = true;
+  btn.innerHTML = '&nbsp;&nbsp;CHECKING<span class="dot-anim"></span>';
+  status.className = 'loading';
+  status.innerHTML = '';
+
+  await new Promise(r => setTimeout(r, 1000));
+
+  if (id === 'robot' && pw === 'test') {
+    // ─── SUCCESS ───
+    btn.innerHTML = '✓&nbsp;&nbsp;AUTHENTICATED';
+    setStatus('✓ 認証に成功しました', 'success');
+
+    await new Promise(r => setTimeout(r, 400));
+
+    // Show ACCESS GRANTED overlay
+    overlay.classList.add('show');
+
+    // Redirect after animation
+    await new Promise(r => setTimeout(r, 2200));
+    window.location.href = 'index.html';
+
+  } else {
+    // ─── FAIL ───
+    btn.disabled = false;
+    btn.innerHTML = '▶&nbsp;&nbsp;LOGIN';
+
+    // Shake card
+    card.classList.remove('shake');
+    void card.offsetWidth;
+    card.classList.add('shake');
+
+    // Flash red border
+    card.style.borderColor = 'rgba(248,113,113,0.5)';
+    card.style.boxShadow   = '0 0 0 3px rgba(248,113,113,0.1), 0 24px 60px rgba(0,0,0,0.6)';
+    setTimeout(() => {
+      card.style.borderColor = '';
+      card.style.boxShadow   = '';
+    }, 1000);
+
+    inpId.classList.add('error');
+    inpPw.classList.add('error');
+    setStatus('✕ アクセス拒否: ID / Passwordが違います', 'error');
+    inpPw.value = '';
+    inpId.focus();
+  }
+}
+
+btn.addEventListener('click', doLogin);
+[inpId, inpPw].forEach(el => {
+  el.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+  el.addEventListener('input', clearErrors);
+});
+
+// Auto-focus
+inpId.focus();
+</script>
+</body>
+</html>
