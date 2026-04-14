@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Robot Arm Lab</title>
+<title>ROBOSTA!</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&family=JetBrains+Mono:ital,wght@0,400;0,500;1,400&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
@@ -66,6 +66,17 @@ html, body {
   display: flex;
   align-items: center;
   gap: 8px;
+  white-space: nowrap;
+}
+
+.gnav-tagline {
+  font-size: 9.5px;
+  font-weight: 500;
+  color: var(--text-dim);
+  letter-spacing: 0.02em;
+  margin-left: 10px;
+  padding-left: 10px;
+  border-left: 1px solid var(--border2);
   white-space: nowrap;
 }
 
@@ -404,7 +415,7 @@ html, body {
 /* 10-step progress track */
 .tc-progress {
   display: grid;
-  grid-template-columns: repeat(10, 1fr);
+  grid-template-columns: repeat(8, 1fr);
   gap: 3px;
 }
 .tc-step {
@@ -439,9 +450,42 @@ html, body {
 .tc-hint-line { font-size: 11px; color: var(--text-mid); display: flex; gap: 6px; line-height: 1.4; }
 .tc-hint-line::before { content: '•'; color: var(--purple); flex-shrink: 0; }
 
+/* AI memo box */
+.tc-ai-memo {
+  background: rgba(56,189,248,0.06);
+  border: 1px solid rgba(56,189,248,0.22);
+  border-radius: 8px;
+  padding: 9px 11px;
+  font-size: 11px; color: var(--text-mid); line-height: 1.55;
+  display: flex; gap: 7px; align-items: flex-start;
+}
+.tc-ai-memo::before {
+  content: '✨';
+  font-size: 11px;
+  flex-shrink: 0;
+  line-height: 1.4;
+}
+.tc-ai-memo-text { flex: 1; min-width: 0; }
+
+/* Hint footer (button + AI badge) */
+.tc-hint-footer {
+  display: flex; gap: 6px; align-items: stretch;
+}
+.tc-ai-rec-badge {
+  padding: 0 9px;
+  display: flex; align-items: center;
+  border-radius: 7px;
+  background: rgba(167,139,250,0.12);
+  border: 1px solid rgba(167,139,250,0.32);
+  color: var(--purple);
+  font-size: 9.5px; font-weight: 800;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
 /* Hint send button */
 .tc-hint-btn {
-  padding: 7px 10px; width: 100%; background: transparent;
+  padding: 7px 10px; flex: 1; background: transparent;
   border: 1px solid var(--border2); border-radius: 7px;
   font-family: var(--font-ui); font-size: 11.5px; font-weight: 600;
   color: var(--text-dim); cursor: pointer; transition: all 0.15s; text-align: center;
@@ -602,14 +646,15 @@ html, body {
 
 <!-- ── GLOBAL TAB NAV ── -->
 <nav id="global-nav">
-  <div class="gnav-logo">
+  <div class="gnav-logo" title="Robot × Start × Stage × Station × Stadium">
     <div class="logo-sq">
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
         <path d="M7 2v4l2.5 2" stroke="#38bdf8" stroke-width="1.4" stroke-linecap="round"/>
         <circle cx="7" cy="7" r="5.5" stroke="#38bdf8" stroke-width="1.2"/>
       </svg>
     </div>
-    ROBOT ARM LAB
+    <span>ROBOSTA!</span>
+    <span class="gnav-tagline">Robot × Start × Stage × Station × Stadium</span>
   </div>
   <div class="gnav-tabs">
     <button class="gnav-tab active" data-panel="student">🎓 学生画面</button>
@@ -635,7 +680,7 @@ html, body {
             <circle cx="8" cy="8" r="6.5" stroke="#38bdf8" stroke-width="1.2"/>
           </svg>
         </div>
-        ROBOT ARM LAB
+        ROBOSTA!
       </div>
       <div id="step-pips"></div>
       <div id="bar-spacer"></div>
@@ -671,7 +716,7 @@ html, body {
           </div>
           <div class="editor-tab">
             <div class="tab-dot"></div>
-            <span id="tab-name">step1.js</span>
+            <span id="tab-name">mission1.js</span>
           </div>
         </div>
         <div id="editor-area">
@@ -690,7 +735,7 @@ html, body {
 
       <div id="sim-panel">
         <div id="sim-canvas-container"></div>
-        <div id="sim-status">Step 1 を実行してスタート</div>
+        <div id="sim-status">Mission 1 を実行してスタート</div>
       </div>
     </div>
 
@@ -706,7 +751,7 @@ html, body {
       <div class="adm-stats">
         <div class="adm-stat"><div class="val">8</div><div class="lbl">チーム</div></div>
         <div class="adm-stat"><div class="val">32</div><div class="lbl">学習者</div></div>
-        <div class="adm-stat"><div class="val" id="adm-avg-step">—</div><div class="lbl">平均Step</div></div>
+        <div class="adm-stat"><div class="val" id="adm-avg-step">—</div><div class="lbl">平均Mission</div></div>
       </div>
     </div>
 
@@ -762,27 +807,27 @@ html, body {
       <div class="ai-header-top">
         <div class="ai-header-icon">✨</div>
         <div>
-          <div class="ai-header-title">AIコードレビュー</div>
-          <div class="ai-header-sub">step4.js — 最終提出コードの解析結果</div>
+          <div class="ai-header-title">ROBOSTA! AI Review</div>
+          <div class="ai-header-sub">mission8.js — 最終提出コードの解析結果</div>
         </div>
         <div class="ai-status-badge">● 解析完了</div>
       </div>
 
       <div class="ai-scores">
         <div class="ai-score-card quality">
-          <div class="ai-score-lbl">コード品質</div>
+          <div class="ai-score-lbl">Speed</div>
           <div class="ai-score-val">A</div>
-          <div class="ai-score-sub">優秀・可読性が高い</div>
+          <div class="ai-score-sub">高速・安定したサイクル</div>
         </div>
         <div class="ai-score-card accuracy">
-          <div class="ai-score-lbl">座標精度</div>
+          <div class="ai-score-lbl">Precision</div>
           <div class="ai-score-val">B+</div>
           <div class="ai-score-sub">良好・一部改善余地あり</div>
         </div>
         <div class="ai-score-card done-rate">
-          <div class="ai-score-lbl">達成率</div>
+          <div class="ai-score-lbl">Efficiency</div>
           <div class="ai-score-val">92%</div>
-          <div class="ai-score-sub">目標をほぼ達成</div>
+          <div class="ai-score-sub">無駄な動きが少ない</div>
           <div class="ai-score-bar"><div class="ai-score-bar-fill"></div></div>
         </div>
       </div>
@@ -843,47 +888,113 @@ document.querySelectorAll('.gnav-tab').forEach(btn => {
 ═══════════════════════════════════════════ */
 const STEPS = [
   {
-    title: 'アームを赤ブロックの上へ移動させよう',
-    desc:  'arm.moveAbove("red") を呼び出して、アームを赤ブロックの真上に移動させてください。',
-    hint:  'moveAbove(target) はアームを指定ブロックの上に移動します',
+    name: 'First Move',
+    title: 'アームを動かせ',
+    desc: 'arm.moveTo(1, 0, 1) でアームを座標(1,0,1)へ移動させてください。',
+    hint: 'moveTo(x, y, z) で絶対座標へ移動します',
     code:
-`// Step 1: アームを赤ブロックの上へ移動
-// moveAbove(target) でアームを目標の上に移動します
+`// Mission 1: First Move — アームを動かせ
+// moveTo(x, y, z) で指定座標へ移動します
 
-await arm.moveAbove("red");`
+await arm.moveTo(1, 0, 1);`
   },
   {
-    title: 'アームを下げてブロックを掴もう',
-    desc:  'lower() → grip() → lift() の順に呼び出して、赤ブロックを持ち上げてください。',
-    hint:  '3つの動作を await で待ちながら順番に実行しましょう',
+    name: 'Touch Down',
+    title: 'ブロックに触れ',
+    desc: 'アームを下降させて、赤ブロックの上面に着地させてください。',
+    hint: 'moveAbove() で真上へ、touchDown() で着地',
     code:
-`// Step 2: アームを下げてブロックを掴む
-// await を付けて順番に実行することが重要です
+`// Mission 2: Touch Down — ブロックに触れ
+// 真上に移動してから touchDown() で着地
 
-await arm.lower();   // アームを下げる
-await arm.grip();    // ブロックを掴む
-await arm.lift();    // 持ち上げる`
+await arm.moveAbove("red");
+await arm.touchDown();`
   },
   {
-    title: '掴んだブロックを緑ブロックの上へ運ぼう',
-    desc:  'arm.moveTo("green") を呼び出して、赤ブロックを緑ブロックの真上まで運んでください。',
-    hint:  'moveTo(target) はアームを指定ブロックの位置へ移動します',
+    name: 'Grip It',
+    title: '掴んで離せ',
+    desc: '下降 → grip → lift → release の順で、ブロックを掴んで離してください。',
+    hint: 'grip() と release() はグリッパーの開閉です',
     code:
-`// Step 3: 緑ブロックの上へ運ぶ
-// moveTo(target) でアームを目標位置に移動します
+`// Mission 3: Grip It — 掴んで離せ
+// グリッパーの基本動作を覚える
 
-await arm.moveTo("green");`
+await arm.moveAbove("red");
+await arm.lower();
+await arm.grip();
+await arm.lift();
+await arm.release();`
   },
   {
-    title: 'ブロックを置いてホームへ戻ろう',
-    desc:  'place() でブロックを置き、returnHome() でアームを初期位置に戻してください。',
-    hint:  'place() → returnHome() の順に実行します',
+    name: 'Carrier',
+    title: 'ブロックを運べ',
+    desc: 'ブロックを掴んで、指定地点まで運んで置いてください。',
+    hint: 'pickUp() → placeAt() で一連の搬送動作',
     code:
-`// Step 4: ブロックを置いてホームに戻る
-// place() で置いて returnHome() でホームへ
+`// Mission 4: Carrier — ブロックを運べ
+// pickUp() と placeAt() で搬送
 
-await arm.place();
-await arm.returnHome();`
+await arm.pickUp("red");
+await arm.placeAt(-1.3, -1);`
+  },
+  {
+    name: 'Sharp Eye',
+    title: '正確に置け',
+    desc: '緑のターゲットゾーンの中心にブロックを正確に配置してください。',
+    hint: 'ターゲットの中心座標を狙うと高得点',
+    code:
+`// Mission 5: Sharp Eye — 正確に置け
+// ターゲットゾーンの中心を狙う
+
+await arm.pickUp("red");
+await arm.placeAt(-1.3, -1);`
+  },
+  {
+    name: 'Side by Side',
+    title: '2個並べよ',
+    desc: '赤と青のブロックをターゲット付近に横並びで配置してください。',
+    hint: '1個ずつ順番に。位置をずらして配置',
+    code:
+`// Mission 6: Side by Side — 2個並べよ
+// 2個のブロックを横に並べる
+
+await arm.pickUp("red");
+await arm.placeAt(-1.0, -1);
+
+await arm.pickUp("blue");
+await arm.placeAt(-1.7, -1);`
+  },
+  {
+    name: 'Stacker',
+    title: '積め',
+    desc: '青ブロックを赤ブロックの上に積み上げてください。',
+    hint: 'stackOn(target) で既存ブロックの上に積めます',
+    code:
+`// Mission 7: Stacker — 積め
+// 2段に積み上げる
+
+await arm.pickUp("red");
+await arm.placeAt(-1.3, -1);
+
+await arm.pickUp("blue");
+await arm.stackOn("red");`
+  },
+  {
+    name: 'Speed Stacker',
+    title: '速く正確に積め',
+    desc: '速度を上げて、精度を保ったまま素早く積み上げてください。',
+    hint: 'setSpeed(2) で2倍速に',
+    code:
+`// Mission 8: Speed Stacker — 速く正確に積め
+// ジョイント補間（PTP）で経由点を省略して高速搬送
+
+arm.setSpeed(2);
+
+await arm.fastPick("red");
+await arm.fastPlaceAt(-1.3, -1);
+
+await arm.fastPick("blue");
+await arm.fastStackOn("red");`
   }
 ];
 
@@ -973,6 +1084,24 @@ const greenBlock = new THREE.Mesh(
 );
 greenBlock.position.set(-1.3, BS / 2, -1); greenBlock.castShadow = true; scene.add(greenBlock);
 
+const blueBlock = new THREE.Mesh(
+  new THREE.BoxGeometry(BS, BS, BS),
+  new THREE.MeshStandardMaterial({ color: 0x3b82f6, roughness: 0.4 })
+);
+blueBlock.position.set(1.8, BS / 2, -0.3); blueBlock.castShadow = true; blueBlock.visible = false; scene.add(blueBlock);
+
+// Target zone (緑のリング) — Mission 5+ で表示
+const targetZone = new THREE.Mesh(
+  new THREE.RingGeometry(0.32, 0.46, 32),
+  new THREE.MeshBasicMaterial({ color: 0x34d399, transparent: true, opacity: 0.85, side: THREE.DoubleSide })
+);
+targetZone.rotation.x = -Math.PI / 2;
+targetZone.position.set(-1.3, 0.01, -1);
+targetZone.visible = false;
+scene.add(targetZone);
+
+const BLOCKS = { red: redBlock, green: greenBlock, blue: blueBlock };
+
 function solveIK(tx, ty, tz) {
   const baseAngle = Math.atan2(tx, tz);
   const dx = Math.sqrt(tx*tx + tz*tz), dy = ty - 0.3;
@@ -986,7 +1115,7 @@ function solveIK(tx, ty, tz) {
 }
 
 let curA = { baseAngle: 0, shoulderAngle: Math.PI/4, elbowAngle: -Math.PI/3 };
-let isAnimating = false, grabbed = false;
+let isAnimating = false, grabbed = false, grabbedBlock = null, speedMultiplier = 1;
 
 function applyAngles(a) {
   basePivot.rotation.y     = a.baseAngle;
@@ -1020,55 +1149,159 @@ function animateTo(target, dur, onTick) {
 }
 
 const ABOVE = 2.2, GRAB = BS/2 + 0.15;
+const sp = (ms) => ms / speedMultiplier;
+
+function updateGrabbed() {
+  if (grabbedBlock) {
+    const ee = getEEPos();
+    grabbedBlock.position.set(ee.x, ee.y - 0.3, ee.z);
+  }
+}
+
+async function animMoveToCoord(x, y, z) {
+  setStatus(`座標 (${x}, ${y}, ${z}) へ移動中...`);
+  await animateTo({ ...solveIK(x, ABOVE + y, z), gripperOpen }, sp(1500), updateGrabbed);
+}
 
 async function animMoveAbove(target) {
-  const p = target === 'red' ? redBlock.position : greenBlock.position;
-  setStatus('赤ブロックの上に移動中...');
-  await animateTo({ ...solveIK(p.x, ABOVE, p.z), gripperOpen: 0.2 }, 1500);
+  const b = BLOCKS[target];
+  if (!b) throw new Error(`ブロック "${target}" が見つかりません`);
+  setStatus(`${target} ブロックの上に移動中...`);
+  await animateTo({ ...solveIK(b.position.x, ABOVE, b.position.z), gripperOpen }, sp(1500), updateGrabbed);
 }
+
+async function animTouchDown() {
+  setStatus('着地中...');
+  const ee = getEEPos();
+  let nearest = null, dmin = Infinity;
+  for (const b of Object.values(BLOCKS)) {
+    if (!b.visible) continue;
+    const d = Math.hypot(b.position.x - ee.x, b.position.z - ee.z);
+    if (d < dmin) { dmin = d; nearest = b; }
+  }
+  if (!nearest) { setStatus('対象ブロックが見つかりません'); return; }
+  const topY = nearest.position.y + BS/2 + 0.18;
+  await animateTo({ ...solveIK(nearest.position.x, topY, nearest.position.z), gripperOpen }, sp(1000), updateGrabbed);
+}
+
 async function animLower() {
-  const p = redBlock.position; setStatus('アームを下げています...');
-  await animateTo({ ...solveIK(p.x, GRAB, p.z), gripperOpen: 0.2 }, 1000);
+  setStatus('アームを下げています...');
+  const ee = getEEPos();
+  await animateTo({ ...solveIK(ee.x, GRAB, ee.z), gripperOpen }, sp(1000), updateGrabbed);
 }
+
 async function animGrip() {
   setStatus('ブロックを掴んでいます...');
-  await animateTo({ ...curA, gripperOpen: 0.06 }, 600); grabbed = true;
+  await animateTo({ ...curA, gripperOpen: 0.06 }, sp(600));
+  grabbed = true;
+  const ee = getEEPos();
+  for (const b of Object.values(BLOCKS)) {
+    if (!b.visible) continue;
+    if (Math.hypot(b.position.x - ee.x, b.position.z - ee.z) < 0.4) { grabbedBlock = b; break; }
+  }
 }
+
 async function animLift() {
-  const p = redBlock.position; setStatus('持ち上げています...');
-  await animateTo({ ...solveIK(p.x, ABOVE, p.z), gripperOpen: 0.06 }, 1000, () => {
-    if (grabbed) { const ee = getEEPos(); redBlock.position.set(ee.x, ee.y-0.3, ee.z); }
-  });
+  setStatus('持ち上げています...');
+  const ee = getEEPos();
+  await animateTo({ ...solveIK(ee.x, ABOVE, ee.z), gripperOpen: 0.06 }, sp(1000), updateGrabbed);
 }
-async function animMoveTo(target) {
-  const p = target === 'green' ? greenBlock.position : redBlock.position;
-  setStatus('緑ブロックの上へ移動中...');
-  await animateTo({ ...solveIK(p.x, ABOVE+BS, p.z), gripperOpen: 0.06 }, 2000, () => {
-    if (grabbed) { const ee = getEEPos(); redBlock.position.set(ee.x, ee.y-0.3, ee.z); }
-  });
+
+async function animRelease() {
+  setStatus('離しています...');
+  await animateTo({ ...curA, gripperOpen: 0.2 }, sp(500));
+  grabbed = false; grabbedBlock = null;
 }
-async function animPlace() {
-  const gp = greenBlock.position; setStatus('ブロックを置いています...');
-  await animateTo({ ...solveIK(gp.x, BS+BS/2+0.15, gp.z), gripperOpen: 0.06 }, 1000, () => {
-    if (grabbed) { const ee = getEEPos(); redBlock.position.set(ee.x, ee.y-0.3, ee.z); }
-  });
-  grabbed = false; redBlock.position.set(gp.x, BS+BS/2, gp.z);
-  await animateTo({ ...curA, gripperOpen: 0.2 }, 500);
+
+async function animPickUp(target) {
+  await animMoveAbove(target);
+  await animLower();
+  await animGrip();
+  await animLift();
 }
+
+async function animPlaceAt(x, z) {
+  setStatus(`(${x}, ${z}) へ配置中...`);
+  await animateTo({ ...solveIK(x, ABOVE, z), gripperOpen: 0.06 }, sp(1500), updateGrabbed);
+  const placeY = BS/2 + 0.18;
+  await animateTo({ ...solveIK(x, placeY, z), gripperOpen: 0.06 }, sp(800), updateGrabbed);
+  if (grabbedBlock) grabbedBlock.position.set(x, BS/2, z);
+  grabbed = false; grabbedBlock = null;
+  await animateTo({ ...curA, gripperOpen: 0.2 }, sp(400));
+  await animateTo({ ...solveIK(x, ABOVE, z), gripperOpen: 0.2 }, sp(600));
+}
+
+async function animStackOn(target) {
+  const b = BLOCKS[target];
+  if (!b) throw new Error(`ブロック "${target}" が見つかりません`);
+  setStatus(`${target}ブロックの上に積んでいます...`);
+  const p = b.position;
+  await animateTo({ ...solveIK(p.x, ABOVE, p.z), gripperOpen: 0.06 }, sp(1500), updateGrabbed);
+  const stackY = p.y + BS + 0.18;
+  await animateTo({ ...solveIK(p.x, stackY, p.z), gripperOpen: 0.06 }, sp(800), updateGrabbed);
+  if (grabbedBlock) grabbedBlock.position.set(p.x, p.y + BS, p.z);
+  grabbed = false; grabbedBlock = null;
+  await animateTo({ ...curA, gripperOpen: 0.2 }, sp(400));
+  await animateTo({ ...solveIK(p.x, ABOVE + BS, p.z), gripperOpen: 0.2 }, sp(600));
+}
+
+// ジョイント補間（PTP）— 経由点なしで目標姿勢まで直接補間
+async function animFastPick(target) {
+  const b = BLOCKS[target];
+  if (!b) throw new Error(`ブロック "${target}" が見つかりません`);
+  setStatus(`${target} へ斜めアプローチ中...`);
+  await animateTo({ ...solveIK(b.position.x, GRAB, b.position.z), gripperOpen: 0.2 }, sp(1100));
+  await animateTo({ ...curA, gripperOpen: 0.06 }, sp(350));
+  grabbed = true; grabbedBlock = b;
+  setStatus('掴みました');
+}
+
+async function animFastPlaceAt(x, z) {
+  setStatus(`(${x}, ${z}) へ斜め搬送中...`);
+  const placeY = BS/2 + 0.18;
+  await animateTo({ ...solveIK(x, placeY, z), gripperOpen: 0.06 }, sp(1400), updateGrabbed);
+  if (grabbedBlock) grabbedBlock.position.set(x, BS/2, z);
+  grabbed = false; grabbedBlock = null;
+  await animateTo({ ...curA, gripperOpen: 0.2 }, sp(280));
+}
+
+async function animFastStackOn(target) {
+  const b = BLOCKS[target];
+  if (!b) throw new Error(`ブロック "${target}" が見つかりません`);
+  const p = b.position;
+  setStatus(`${target} の上に斜めスタック中...`);
+  const stackY = p.y + BS + 0.18;
+  await animateTo({ ...solveIK(p.x, stackY, p.z), gripperOpen: 0.06 }, sp(1400), updateGrabbed);
+  if (grabbedBlock) grabbedBlock.position.set(p.x, p.y + BS, p.z);
+  grabbed = false; grabbedBlock = null;
+  await animateTo({ ...curA, gripperOpen: 0.2 }, sp(280));
+}
+
 async function animReturnHome() {
-  const gp = greenBlock.position; setStatus('ホームポジションに戻っています...');
-  await animateTo({ ...solveIK(gp.x, ABOVE+BS, gp.z), gripperOpen: 0.2 }, 800);
-  await animateTo({ baseAngle: 0, shoulderAngle: Math.PI/4, elbowAngle: -Math.PI/3, gripperOpen: 0.15 }, 1500);
+  setStatus('ホームポジションに戻っています...');
+  await animateTo({ baseAngle: 0, shoulderAngle: Math.PI/4, elbowAngle: -Math.PI/3, gripperOpen: 0.15 }, sp(1500));
 }
 
 const arm = {
+  moveTo: (...args) => {
+    if (args.length === 1) return animMoveAbove(args[0]);
+    return animMoveToCoord(args[0], args[1], args[2]);
+  },
   moveAbove:  t => animMoveAbove(t),
+  touchDown:  () => animTouchDown(),
   lower:      () => animLower(),
   grip:       () => animGrip(),
   lift:       () => animLift(),
-  moveTo:     t => animMoveTo(t),
-  place:      () => animPlace(),
+  release:    () => animRelease(),
+  pickUp:     t => animPickUp(t),
+  placeAt:    (x, z) => animPlaceAt(x, z),
+  stackOn:    t => animStackOn(t),
+  fastPick:   t => animFastPick(t),
+  fastPlaceAt:(x, z) => animFastPlaceAt(x, z),
+  fastStackOn:t => animFastStackOn(t),
   returnHome: () => animReturnHome(),
+  setSpeed:   s => { speedMultiplier = s; },
+  place:      () => animPlaceAt(greenBlock.position.x, greenBlock.position.z),
 };
 
 /* ═══════════════════════════════════════════
@@ -1088,17 +1321,35 @@ function renderPips() {
     pip.className = 'step-pip' + (stepsDone.has(i) ? ' done' : i === currentStep ? ' active' : '');
     const num = document.createElement('div'); num.className = 'num';
     num.textContent = stepsDone.has(i) ? '✓' : String(i+1);
-    pip.appendChild(num); pip.appendChild(document.createTextNode(` Step ${i+1}`));
+    pip.appendChild(num); pip.appendChild(document.createTextNode(` ${s.name}`));
     el.appendChild(pip);
   });
 }
 
 function updateMission() {
   const s = STEPS[currentStep];
-  document.getElementById('mission-title').textContent = `Step ${currentStep+1}: ${s.title}`;
+  document.getElementById('mission-title').textContent = `Mission ${currentStep+1}: ${s.name} — ${s.title}`;
   document.getElementById('mission-desc').textContent  = s.desc;
   document.getElementById('hint-text').textContent     = s.hint;
-  document.getElementById('tab-name').textContent      = `step${currentStep+1}.js`;
+  document.getElementById('tab-name').textContent      = `mission${currentStep+1}.js`;
+}
+
+const MISSION_SETUPS = [
+  () => { redBlock.visible=false; greenBlock.visible=false; blueBlock.visible=false; targetZone.visible=false; },
+  () => { redBlock.visible=true;  redBlock.position.set(1.5, BS/2, 1); greenBlock.visible=false; blueBlock.visible=false; targetZone.visible=false; },
+  () => { redBlock.visible=true;  redBlock.position.set(1.5, BS/2, 1); greenBlock.visible=false; blueBlock.visible=false; targetZone.visible=false; },
+  () => { redBlock.visible=true;  redBlock.position.set(1.5, BS/2, 1); greenBlock.visible=false; blueBlock.visible=false; targetZone.visible=false; targetZone.position.set(-1.3, 0.01, -1); },
+  () => { redBlock.visible=true;  redBlock.position.set(1.5, BS/2, 1); greenBlock.visible=false; blueBlock.visible=false; targetZone.visible=true;  targetZone.position.set(-1.3, 0.01, -1); },
+  () => { redBlock.visible=true;  redBlock.position.set(1.5, BS/2, 1); blueBlock.visible=true;   blueBlock.position.set(1.8, BS/2, -0.3); greenBlock.visible=false; targetZone.visible=true; targetZone.position.set(-1.3, 0.01, -1); },
+  () => { redBlock.visible=true;  redBlock.position.set(1.5, BS/2, 1); blueBlock.visible=true;   blueBlock.position.set(1.8, BS/2, -0.3); greenBlock.visible=false; targetZone.visible=true; targetZone.position.set(-1.3, 0.01, -1); },
+  () => { redBlock.visible=true;  redBlock.position.set(1.5, BS/2, 1); blueBlock.visible=true;   blueBlock.position.set(1.8, BS/2, -0.3); greenBlock.visible=false; targetZone.visible=true; targetZone.position.set(-1.3, 0.01, -1); },
+];
+
+function setupMission() {
+  grabbed = false; grabbedBlock = null; speedMultiplier = 1;
+  curA = { baseAngle: 0, shoulderAngle: Math.PI/4, elbowAngle: -Math.PI/3 };
+  applyAngles(curA); setGripper(0.15);
+  (MISSION_SETUPS[currentStep] || MISSION_SETUPS[0])();
 }
 
 /* Code editor */
@@ -1120,7 +1371,7 @@ function buildHighlightedNodes(raw) {
       let j = i; while (j < raw.length && /[\w$]/.test(raw[j])) j++;
       const word = raw.slice(i,j);
       const kws = ['await','async','const','let','var','function','return','if','else','for','while','of','in','new'];
-      const fns = ['moveAbove','lower','grip','lift','moveTo','place','returnHome'];
+      const fns = ['moveTo','moveAbove','touchDown','lower','grip','lift','release','pickUp','placeAt','stackOn','fastPick','fastPlaceAt','fastStackOn','returnHome','setSpeed','place'];
       tokens.push({ type: kws.includes(word)?'kw':word==='arm'?'obj':fns.includes(word)?'fn':'txt', val: word });
       i = j; continue;
     }
@@ -1191,12 +1442,12 @@ async function runCode() {
     const isFinal = currentStep === STEPS.length - 1;
     showStepClear(isFinal);
     if (!isFinal) {
-      setStatus(`Step ${currentStep+1} クリア！次へ進みます...`);
+      setStatus(`Mission ${currentStep+1} クリア！次へ進みます...`);
       await new Promise(r => setTimeout(r, 3000));
-      currentStep++; renderPips(); updateMission(); loadStepCode();
-      setStatus(`Step ${currentStep+1} を実行してください`);
+      currentStep++; setupMission(); renderPips(); updateMission(); loadStepCode();
+      setStatus(`Mission ${currentStep+1} を実行してください`);
     } else {
-      setStatus('🎉 ミッション完了！赤ブロックが緑ブロックの上に置かれました！');
+      setStatus('🎉 全ミッション完了！お疲れさまでした！');
     }
   } catch (err) { showError(err.message || String(err)); }
   finally { isAnimating = false; runBtn.disabled = resetBtn.disabled = false; }
@@ -1204,12 +1455,8 @@ async function runCode() {
 
 function resetSim() {
   if (isAnimating) return;
-  grabbed = false;
-  redBlock.position.set(1.5, BS/2, 1);
-  greenBlock.position.set(-1.3, BS/2, -1);
-  curA = { baseAngle: 0, shoulderAngle: Math.PI/4, elbowAngle: -Math.PI/3 };
-  applyAngles(curA); setGripper(0.15);
-  setStatus(`Step ${currentStep+1} を実行してください`);
+  setupMission();
+  setStatus(`Mission ${currentStep+1} を実行してください`);
   loadStepCode();
 }
 
@@ -1238,30 +1485,38 @@ new ResizeObserver(onSimResize).observe(container);
    ADMIN DASHBOARD
 ═══════════════════════════════════════════ */
 const TEAMS = [
-  { name:'Alpha',   members:['田中','佐藤','山本','鈴木'],   step:4, stalled:false },
-  { name:'Beta',    members:['高橋','渡辺','伊藤','小林'],   step:3, stalled:true  },
-  { name:'Gamma',   members:['加藤','吉田','中村','松本'],   step:6, stalled:false },
-  { name:'Delta',   members:['井上','木村','林','清水'],     step:2, stalled:false },
-  { name:'Epsilon', members:['山口','森','池田','橋本'],     step:5, stalled:false },
-  { name:'Zeta',    members:['阿部','石川','前田','藤田'],   step:1, stalled:true  },
-  { name:'Eta',     members:['小川','岡田','後藤','長谷川'], step:8, stalled:false },
-  { name:'Theta',   members:['村上','近藤','坂本','遠藤'],   step:4, stalled:false },
+  { name:'Alpha',   members:['田中','佐藤','山本','鈴木'],   step:4, stalled:false,
+    aiMemo:'Carrierミッションを順調に進行中。placeAt座標の理解も良好です。' },
+  { name:'Beta',    members:['高橋','渡辺','伊藤','小林'],   step:3, stalled:true,
+    aiMemo:'gripperタイミングで詰まっています。仕様書P3を案内してください。' },
+  { name:'Gamma',   members:['加藤','吉田','中村','松本'],   step:6, stalled:false,
+    aiMemo:'Side by Sideで配置座標を議論中。チームワーク良好。' },
+  { name:'Delta',   members:['井上','木村','林','清水'],     step:2, stalled:false,
+    aiMemo:'Touch Down中。着地高さの感覚を掴みかけています。' },
+  { name:'Epsilon', members:['山口','森','池田','橋本'],     step:5, stalled:false,
+    aiMemo:'Sharp Eyeでターゲット精度を追求中。惜しい精度で推移。' },
+  { name:'Zeta',    members:['阿部','石川','前田','藤田'],   step:1, stalled:true,
+    aiMemo:'座標系の理解で停滞。右手座標系の説明を促してください。' },
+  { name:'Eta',     members:['小川','岡田','後藤','長谷川'], step:8, stalled:false,
+    aiMemo:'Speed Stackerでタイム更新を狙っています。精度との両立が課題。' },
+  { name:'Theta',   members:['村上','近藤','坂本','遠藤'],   step:4, stalled:false,
+    aiMemo:'Carrier攻略中。退避高さの概念が身についてきました。' },
 ];
 
-const TASKS = ['仕様書を読む','座標系理解','move_to学習','初コード','実行確認','座標修正','目標接近','精度向上','クリア！','レビュー'];
+const TASKS = ['First Move','Touch Down','Grip It','Carrier','Sharp Eye','Side by Side','Stacker','Speed Stacker'];
 
 const STEP_HINTS = [
-  ['仕様書のP.1〜3をチームで読んでください','ロボットの座標原点を確認してください','役割分担を決めておくとスムーズです'],
-  ['X・Y・Z軸の向きを図で確認してください','ジョイント角とエンドエフェクタの関係を理解しましょう','右手系 vs 左手系に注意してください'],
-  ['move_to()の引数は(x, y, z)の順です','APIリファレンスのサンプルコードを参考に','速度パラメータはデフォルトで大丈夫です'],
-  ['まずprint文で現在位置を確認しましょう','ゴール座標は仕様書P.7に記載があります','ループより先に1回だけ動かしてみて'],
-  ['エラーメッセージを注意深く読んでください','ログファイルの最後の行を確認してください','再実行前にアームをホームに戻してください'],
-  ['誤差は±5mm以内を目指してください','座標値を0.1刻みで微調整してみましょう','オフセット変数を使うと調整しやすいです'],
-  ['残り距離をprint()で確認してください','制御ループのサンプリング周期を確認して','目標の10cm前から減速させてみてください'],
-  ['PID制御のPゲインを少し下げてみて','振動が出る場合はDゲインを上げてください','ノイズ対策にローパスフィルタを試して'],
-  ['クリア条件を再確認してください','ラスト10cmは低速モードがおすすめです','成功したらすぐスクリーンショットを！'],
-  ['コードにコメントを追加しましょう','チームで振り返りを行ってください','レビューシートの記入を忘れずに'],
+  ['moveTo(x, y, z)の引数順を確認してください','ホーム位置から(1, 0, 1)への動きを観察','IK可動域内の座標を選んでください'],
+  ['moveAbove()で真上へ移動してから','touchDown()でブロック上面に着地','降下速度はデフォルトでOKです'],
+  ['lower → grip → lift → releaseの順を意識','gripper開閉はawaitで待機','release位置は現状のままでOK'],
+  ['pickUp()はmoveAbove+lower+grip+lift','placeAt(x, z)で搬送先を指定','退避高さは自動で確保されます'],
+  ['ターゲットゾーンの中心を狙いましょう','placeAt(-1.3, -1)が中心座標です','精度±0.05を目指してください'],
+  ['2つのブロックを順番に処理','配置間隔は0.7程度がおすすめ','Z軸を揃えると見栄え良し'],
+  ['stackOn("red")で既存ブロックの上に','下段を先に配置してから上段を積む','ブロック中心の座標合わせが重要'],
+  ['setSpeed(2)で2倍速に設定','速度を上げても精度を落とさない','高速移動時の振動に注意してください'],
 ];
+
+const AI_RECOMMENDATIONS = new Set(['Beta','Zeta','Epsilon','Eta']);
 
 function buildAdminDashboard() {
   const grid = document.getElementById('team-grid');
@@ -1281,18 +1536,24 @@ function buildAdminDashboard() {
       return `<div class="tc-step ${cls}" title="${task}"><div class="ts-pip">${icon}</div></div>`;
     }).join('');
 
+    const missionName = TASKS[team.step - 1] || `Mission ${team.step}`;
+    const recommended = AI_RECOMMENDATIONS.has(team.name);
     card.innerHTML = `
       <div class="tc-header">
         <div class="tc-name">${team.name}</div>
-        <div class="tc-step-badge">Step ${team.step}${team.stalled?' ⏸':''}</div>
+        <div class="tc-step-badge">${missionName}${team.stalled?' ⏸':''}</div>
       </div>
       <div class="tc-members">${team.members.join(' · ')}</div>
       <div class="tc-progress">${pipsHtml}</div>
+      <div class="tc-ai-memo"><div class="tc-ai-memo-text">${team.aiMemo}</div></div>
       <div class="tc-hints">
-        <div class="tc-hints-title">現在のヒント — Step ${team.step}</div>
+        <div class="tc-hints-title">現在のヒント — ${missionName}</div>
         ${hints.map(h => `<div class="tc-hint-line">${h}</div>`).join('')}
       </div>
-      <button class="tc-hint-btn" data-team="${team.name}">💬 ヒントを送信</button>
+      <div class="tc-hint-footer">
+        <button class="tc-hint-btn" data-team="${team.name}">💬 ヒントを送信</button>
+        ${recommended ? '<div class="tc-ai-rec-badge">✨ AIが推奨</div>' : ''}
+      </div>
     `;
     grid.appendChild(card);
   });
@@ -1319,6 +1580,7 @@ document.querySelectorAll('.faq-q').forEach(q => {
 /* ═══════════════════════════════════════════
    INIT
 ═══════════════════════════════════════════ */
+setupMission();
 renderPips();
 updateMission();
 loadStepCode();
@@ -1328,14 +1590,14 @@ buildAdminDashboard();
    AI REVIEW CHAT
 ═══════════════════════════════════════════ */
 const AI_HISTORY = [
-  { side:'ai', variant:'normal',  text:'お疲れさまでした！全体として良いコードです。' },
-  { side:'ai', variant:'good',    text:'Good: move_toで座標を正確に指定できています。' },
-  { side:'user',                  text:'直接移動だとダメですか？' },
-  { side:'ai', variant:'warn',    text:'改善: 中間点を経由する方が安全です。',
-    secondary:'💡 現場の知恵：実際のロボットは退避高さ（Z+0.3m）を経由してから目標へ向かいます。' },
-  { side:'ai', variant:'insight', text:'Insight: gripper.close()のタイミングが鍵。time.sleep(0.3)の待機がベストプラクティス。' },
-  { side:'user',                  text:'次のミッションに向けてアドバイスは？' },
-  { side:'ai', variant:'normal',  text:'次は複数ブロックの連続操作です。1つの動作完了を確認してから次へ進むことで、ミスが激減します。' },
+  { side:'ai', variant:'normal',  text:'Mission 8 お疲れさまでした！Speed Stackerの完成度を解析しました。' },
+  { side:'ai', variant:'good',    text:'座標指定が正確です。退避高さも適切に設定されています。' },
+  { side:'user',                  text:'gripperの閉じるタイミングは大丈夫ですか？' },
+  { side:'ai', variant:'warn',    text:'gripper.close()のタイミングが早すぎます。アームが完全に降下してから掴む必要があります。',
+    secondary:'💡 lower()の完了を await で待ってから grip() を呼び出すようにしてください。' },
+  { side:'ai', variant:'insight', text:'製造現場では、アプローチ速度を2段階に分けます。高速で接近→低速で着地。これで振動を抑えられます。' },
+  { side:'user',                  text:'速度と精度の両立のコツは？' },
+  { side:'ai', variant:'normal',  text:'移動区間は高速、把持・配置の直前だけ減速するのが定石です。setSpeed(2)で移動し、ラスト10cmでsetSpeed(0.5)に落とすと精度が維持できます。' },
 ];
 
 // タグのプレフィックスとクラスの対応
